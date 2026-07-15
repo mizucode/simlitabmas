@@ -119,13 +119,25 @@
 							include "module/content/account/default.php";
 						}
 						elseif ($module=='update'){
-							include "module/content/update/lppm.php";
+							if (@$folder[2] == 'penelitian') {
+								include "module/content/update/penelitian.php";
+							} else {
+								include "module/content/update/lppm.php";
+							}
 						}
 						elseif ($module=='insert'){
-							include "module/content/insert/lppm.php";
+							if (@$folder[2] == 'penelitian') {
+								include "module/content/insert/penelitian.php";
+							} else {
+								include "module/content/insert/lppm.php";
+							}
 						}
 						elseif ($module=='delete'){
-							include "module/content/delete/lppm.php";
+							if (@$folder[2] == 'penelitian') {
+								include "module/content/delete/penelitian.php";
+							} else {
+								include "module/content/delete/lppm.php";
+							}
 						}
 						elseif ($module=='kegiatan'){
 							include "module/content/kegiatan/lppm.php";

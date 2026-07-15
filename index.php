@@ -34,6 +34,7 @@ session_start();
 		include "config/time_stamp.php";
 		include "config/config.php";
 		include "config/combobox.php";
+		include "config/upload.php";
 		include "template/adminlte/template.php";
 		}
 

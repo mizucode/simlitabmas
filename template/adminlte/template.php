@@ -11,8 +11,9 @@
   <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700" rel="stylesheet">
   <link rel="icon" href="/dist/img/logo_univ.png" type="image/png">    
   <link href="/plugins/datatables-bs4/css/dataTables.bootstrap4.css" rel="stylesheet" type="text/css" />
-  <link href="/plugins/datatables-buttons/css/buttons.bootstrap4.min.css" rel="stylesheet" type="text/css" />
   <link href='/plugins/icheck-bootstrap/icheck-bootstrap.css' rel='stylesheet' type='text/css' />
+  <link rel="stylesheet" href="/plugins/select2/css/select2.min.css">
+  <link rel="stylesheet" href="/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
     
     <link rel="manifest" href="/manifest.json">
     <meta name="mobile-web-app-capable" content="yes">
@@ -66,6 +67,7 @@
 		<script src="/plugins/datatables-buttons/js/buttons.html5.min.js"></script>
 		<script src="/plugins/datatables-buttons/js/buttons.print.min.js"></script>
 		<script src="/plugins/datatables-buttons/js/buttons.colVis.min.js"></script>
+		<script src="/plugins/select2/js/select2.full.min.js"></script>
 
 		<script src="/plugins/icheck-bootstrap/icheck-bootstrap.min.js" type="text/javascript"></script>
 	
