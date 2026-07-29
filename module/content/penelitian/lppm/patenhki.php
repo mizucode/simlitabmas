@@ -1,264 +1,288 @@
-<?php 
+<?php
 
-ob_start();	
+ob_start();
 
-if (empty($_SESSION['ses_user']) AND empty($_SESSION['ses_pass']) AND empty($_SESSION['ses_level']) ){
+if (empty($_SESSION['ses_user']) AND empty($_SESSION['ses_pass']) AND empty($_SESSION['ses_level'])) {
 	header('location:/login');
-}
-else {
-	switch(@$folder[2]) {
-		default :
-			if(empty($folder['3'])) {
-				$ta = mysqli_fetch_array(mysqli_query($con,"SELECT * FROM ts WHERE active='Y' "));
-				$tgl_start = '0000-00-00';
-				$tgl_end = '2222-22-22';
-			}
-			else {
-			$sta = mysqli_fetch_array(mysqli_query($con,"SELECT * FROM ts WHERE kode='$folder[3]' "));
-				$tgl_start = $sta[tgl_start];
-				$tgl_end = $sta[tgl_end];
-			}
+} else {
 
-?>
+	switch (@$folder[3]) {
 
-			<div class='row'>
-				<div class='col-md-12'>
-					<div class='card card-success'>
-						<div class='card-body'>
-							<select onchange="window.document.location.href=this.options[this.selectedIndex].value;" class='form-control' name='ta'>
-							<option value='/penelitian/<?php echo $folder[2]; ?>'>-- Pilih TA --</option>
-						<?php
-		
-						$qk = mysqli_query($con,"SELECT thn,semester,kode,tgl_start,tgl_end FROM ts WHERE active!='u' ORDER BY kode DESC");
-						while($k = mysqli_fetch_array($qk)) {
-							if($k[kode]==$folder[3]) { $selected = 'selected'; } else {$selected = '';}
-							echo "
-								<option value='/penelitian/$folder[2]/$k[kode]' $selected>$k[thn] $k[semester] ($k[tgl_start] s.d $k[tgl_end])</option>
-							";
-						}
-						?>
-						
+		default:
+
+			// Tentukan rentang tanggal (TA) yang aktif
+			if (empty($folder[3])) {
+				$ta = mysqli_fetch_array(mysqli_query($con, "SELECT * FROM ts WHERE active='Y' "));
+				$tgl_start = '1970-01-01';
+				$tgl_end = '2099-12-31';
+			} else {
+				$sta = mysqli_fetch_array(mysqli_query($con, "SELECT * FROM ts WHERE kode='{$folder[3]}' "));
+				$tgl_start = $sta ? $sta['tgl_start'] : '1970-01-01';
+				$tgl_end = $sta ? $sta['tgl_end'] : '2099-12-31';
+			}
+			?>
+
+			<!-- ============================== -->
+			<!-- Filter Tahun Ajaran (TA)        -->
+			<!-- ============================== -->
+			<div class="row">
+				<div class="col-md-12">
+					<div class="card card-success">
+						<div class="card-body">
+							<select onchange="window.document.location.href=this.options[this.selectedIndex].value;" class="form-control"
+								name="ta">
+								<option value="/penelitian/<?php echo $folder[2]; ?>">-- Pilih TA --</option>
+								<?php
+								$qk = mysqli_query($con, "SELECT thn,semester,kode,tgl_start,tgl_end FROM ts WHERE active!='u' ORDER BY kode DESC");
+								while ($k = mysqli_fetch_array($qk)) {
+									$selected = ($k['kode'] == @$folder[3]) ? 'selected' : '';
+									echo "
+                                        <option value='/penelitian/{$folder[2]}/{$k['kode']}' $selected>{$k['thn']} {$k['semester']} ({$k['tgl_start']} s.d {$k['tgl_end']})</option>
+                                    ";
+								}
+								?>
 							</select>
 						</div>
 					</div>
 				</div>
 			</div>
-<?php
-	if(!empty($folder[3])) {
-?>
-<!--
-			<div class='row'>
-				<div class='col-md-12'>
-					<div class='card card-success'>
-						<div class='card-body'>
-							<select onchange="window.document.location.href=this.options[this.selectedIndex].value;" class='form-control' name='prodi'>
-							<option value='/penelitian/<?php echo $folder[2]; ?>'>-- Prodi --</option>
-						<?php
-		
-						$qp = mysqli_query($con,"SELECT * FROM prodi ORDER BY kode DESC");
-						while($p = mysqli_fetch_array($qp)) {
-							if($p[kode]==$folder[4]) { $selected = 'selected'; } else {$selected = '';}
-							echo "
-								<option value='/penelitian/$folder[2]/$folder[3]/$p[kode]' $selected>$p[nama] ($p[singkatan])</option>
-							";
-						}
-						?>
-						
-							</select>
-						</div>
-					</div>
-				</div>
-			</div>
-!-->
-<?php
-	}
-?>
-			<div class='row'>
-				<div class='col-md-12'>
+
+			<?php if (!empty($folder[3])) { ?>
+				<!--
+								============================== 
+								Filter Program Studi (dinonaktifkan)
+								============================== 
+								<div class='row'>
+										<div class='col-md-12'>
+												<div class='card card-success'>
+														<div class='card-body'>
+																<select onchange="window.document.location.href=this.options[this.selectedIndex].value;" class='form-control' name='prodi'>
+																<option value='/penelitian/<?php echo $folder[2]; ?>'>-- Prodi --</option>
+														<?php
+														$qp = mysqli_query($con, "SELECT * FROM prodi ORDER BY kode DESC");
+														while ($p = mysqli_fetch_array($qp)) {
+															$selected = ($p['kode'] == @$folder[4]) ? 'selected' : '';
+															echo "
+                                    <option value='/penelitian/{$folder[2]}/{$folder[3]}/{$p['kode']}' $selected>{$p['nama']} ({$p['singkatan']})</option>
+                                ";
+														}
+														?>
+																</select>
+														</div>
+												</div>
+										</div>
+								</div>
+								-->
+			<?php } ?>
+
+			<!-- ============================== -->
+			<!-- Tabel Paten dan Hak Kekayaan Intelektual -->
+			<!-- ============================== -->
+			<div class="row">
+				<div class="col-md-12">
 					<div class="card card-outline card-danger">
 						<div class="card-header">
 							<h3 class="card-title">Paten dan Hak Kekayaan Intelektual</h3>
-					                <div class="card-tools">
-					                      <button type="button" class="btn btn-block btn-warning" data-toggle="modal" data-target="#tambah"><i class="fas fa-plus"></i> Tambah</button>
-					                 </div>														
+							<div class="card-tools">
+								<?php
+								// Hitung data yang masih pending validasi
+								$q_pending = mysqli_query($con, "SELECT COUNT(*) as jml FROM penelitian_patenhki WHERE (status='1' OR status IS NULL OR status='') AND tgl_paten>='$tgl_start' AND tgl_paten<='$tgl_end'");
+								$r_pending = mysqli_fetch_assoc($q_pending);
+								$jml_pending = $r_pending['jml'];
+								?>
+								<a href="/penelitian/<?= @$folder[2] ?>/validasi/<?= @$folder[3] ?>" class="btn btn-info">
+									Perlu Validasi
+									<?php if ($jml_pending > 0) { ?>
+										<span class="badge badge-danger"><?= $jml_pending ?></span>
+									<?php } ?>
+								</a>
+								<button type="button" class="btn btn-warning" data-toggle="modal" data-target="#tambah">
+									<i class="fas fa-plus"></i> Tambah Paten
+								</button>
+							</div>
 						</div>
-						<div class="card-body table-responsive p-0">
-							<table class="table table-hover table-striped text-nowrap text-xs">
-								<thead>
+
+						<div class="card-body p-3">
+							<table id="tabel-patenhki" class="table table-bordered table-hover table-striped text-nowrap w-100"
+								style="font-size: 0.9rem;">
+								<thead class="bg-white text-center align-middle">
 									<tr>
-										<th>No</th>
-										<th>Nama Dosen</th>
+										<th class="align-middle" style="width: 50px;">No</th>
+										<th>Tim Dosen Peneliti</th>
+										<th>Ketua</th>
 										<th>Jenis</th>
 										<th>Nama</th>
 										<th>Nomor</th>
 										<th>TKT</th>
 										<th>Tanggal</th>
 										<th>File</th>
+										<th class="text-center">Aksi</th>
 									</tr>
 								</thead>
 								<tbody>
-						<?php
-							$no=1;
-							$q = mysqli_query($con,"SELECT * FROM penelitian_patenhki,dosen WHERE dosen.nik=penelitian_patenhki.nip_dosen AND tgl_paten>='$tgl_start' AND tgl_paten<='$tgl_end' ORDER BY penelitian_patenhki.id_jenis,penelitian_patenhki.judul ");
-							if(mysqli_num_rows($q)<1) {
-								echo"<tr><td colspan='7'><p class='text-center text-danger'>Tidak ada data pada semester/TA yang dipilih</p></td></tr>";
-							}
-							else {
-								while($r=mysqli_fetch_array($q)) {
-									$id_jenis = mysqli_fetch_array(mysqli_query($con,"SELECT * FROM kode WHERE value='$r[id_jenis]' AND kelompok='patenhki' LIMIT 1"));
-									$id_tkt = mysqli_fetch_array(mysqli_query($con,"SELECT * FROM kode WHERE value='$r[id_tkt]' AND kelompok='tkt' LIMIT 1"));
-									echo"
-										<tr>
-											<td>$no</td>
-											<td>$r[name_glr]</td>
-											<td>$id_jenis[desc]</td>
-											<td>$r[judul]</td>
-											<td>$r[nomor]</td>
-											<td>$id_tkt[desc]</td>
-											<td>$r[tgl_paten]</td>
-											<td>
-									";
-									$qfile = mysqli_query($con,"SELECT fd.id,fd.url,kode.desc FROM file_dosen AS fd,kode WHERE fd.kelompok=kode.kelompok AND fd.value_kode=kode.value AND fd.id_cat='$r[id]' AND kode.kelompok='file_patenhki' ");
-									while($rfile=mysqli_fetch_array($qfile)) {
-											echo"
-												<a href='/$rfile[url]' target='_blank'><i class='fa fa-file'></i> $rfile[desc]</a><br>
-											";
+									<?php
+									$no = 1;
+									$q = mysqli_query($con, "SELECT * FROM penelitian_patenhki,dosen WHERE penelitian_patenhki.nip_dosen=dosen.nik AND penelitian_patenhki.status='2' AND tgl_paten>='$tgl_start' AND tgl_paten<='$tgl_end' ORDER BY penelitian_patenhki.id_jenis,penelitian_patenhki.judul ");
+
+									if (mysqli_num_rows($q) > 0) {
+										while ($r = mysqli_fetch_array($q)) {
+
+											$id_jenis = mysqli_fetch_array(mysqli_query($con, "SELECT * FROM kode WHERE value='{$r['id_jenis']}' AND kelompok='patenhki' LIMIT 1"));
+											$id_tkt = mysqli_fetch_array(mysqli_query($con, "SELECT * FROM kode WHERE value='{$r['id_tkt']}' AND kelompok='tkt' LIMIT 1"));
+
+											// Cek jumlah dosen di tabel regis_dosen_penelitian
+											$q_regis_cnt = mysqli_query($con, "SELECT COUNT(*) as total FROM regis_dosen_penelitian WHERE id_porto='{$r['id']}' AND jenis_porto='patenhki'");
+											$d_regis_cnt = mysqli_fetch_array($q_regis_cnt);
+											$jml_dosen = $d_regis_cnt ? (int) $d_regis_cnt['total'] : 0;
+											?>
+											<tr>
+												<td class="align-middle"><?= $no ?></td>
+												<td class="align-middle text-center">
+													<a href="/penelitian/patenhki/anggota/<?= $r['id'] ?>" class="badge badge-info p-2 px-3"
+														style="font-size: 0.9rem;">
+														<i class="fas fa-users mr-1"></i> <?= $jml_dosen ?> Dosen
+													</a>
+												</td>
+												<td class="align-middle">
+													<span class="text-dark"><?= $r['name_glr'] ?></span>
+												</td>
+												<td class="align-middle text-center"><?= $id_jenis ? $id_jenis['desc'] : '' ?></td>
+												<td class="align-middle">
+													<span class="text-dark d-inline-block text-truncate" style="max-width: 250px; line-height: 1.4;"
+														title="<?= htmlspecialchars($r['judul']) ?>">
+														<?= $r['judul'] ?>
+													</span>
+												</td>
+												<td class="align-middle text-center"><?= $r['nomor'] ?></td>
+												<td class="align-middle text-center"><?= $id_tkt ? $id_tkt['desc'] : '' ?></td>
+												<td class="align-middle text-center"><?= $r['tgl_paten'] ?></td>
+												<td class="align-middle text-center">
+													<?php
+													// Ambil daftar file lampiran untuk paten ini
+													$qfile_pivot = mysqli_query($con, "
+                                                        SELECT f.url as url_file, f.value_kode as type_file, d.name_glr
+                                                        FROM file_dosen f
+                                                        LEFT JOIN dosen d ON f.nip_dosen = d.nik
+                                                        WHERE f.id_cat = '{$r['id']}' AND f.kelompok = 'file_patenhki'
+                                                    ");
+
+													$jml_file = mysqli_num_rows($qfile_pivot);
+
+													if ($jml_file > 0) {
+														?>
+														<button type="button" class="btn btn-xs btn-outline-info shadow-sm" data-toggle="modal"
+															data-target="#modalFile<?= $r['id'] ?>">
+															<i class="fas fa-folder-open mr-1"></i> <?= $jml_file ?> File
+														</button>
+
+														<!-- Modal daftar file -->
+														<div class="modal fade text-left" id="modalFile<?= $r['id'] ?>" tabindex="-1" role="dialog"
+															aria-hidden="true">
+															<div class="modal-dialog" role="document">
+																<div class="modal-content">
+																	<div class="modal-header">
+																		<h4 class="modal-title">File Lampiran</h4>
+																		<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+																			<span aria-hidden="true">&times;</span>
+																		</button>
+																	</div>
+																	<div class="modal-body">
+																		<table class="table table-bordered text-sm mb-0">
+																			<thead class="bg-light">
+																				<tr>
+																					<th>Nama Dokumen</th>
+																					<th>Keterangan</th>
+																					<th class="text-center" style="width: 80px;">Aksi</th>
+																				</tr>
+																			</thead>
+																			<tbody>
+																				<?php
+																				// Daftar file dari tabel pivot
+																				while ($rf = mysqli_fetch_array($qfile_pivot)) {
+																					$type = !empty($rf['type_file']) ? $rf['type_file'] : 'Dokumen Pendukung';
+																					?>
+																					<tr>
+																						<td class="align-middle"><?= $type ?></td>
+																						<td class="align-middle"><?= $rf['name_glr'] ?></td>
+																						<td class="text-center align-middle">
+																							<a href="<?= @$storage_url . $rf['url_file'] ?>" target="_blank"
+																								class="btn btn-xs btn-primary">
+																								<i class="fas fa-download"></i> Unduh
+																							</a>
+																						</td>
+																					</tr>
+																					<?php
+																				}
+																				?>
+																			</tbody>
+																		</table>
+																	</div>
+																</div>
+															</div>
+														</div>
+														<?php
+													} else {
+														echo "<span class='text-muted small'>-</span>";
+													}
+													?>
+												</td>
+												<td class="text-center align-middle">
+													<a href="/penelitian/patenhki/anggota/<?= $r['id'] ?>" class="btn btn-xs btn-info shadow-sm">Lihat
+														Detail</a>
+												</td>
+											</tr>
+											<?php
+											$no++;
+										}
 									}
-									echo"
-											</td>
-										</tr>
-									";
-									$no++;
-								}
-								}
-						?>
+									?>
 								</tbody>
 							</table>
 						</div>
 					</div>
-					
-					<div class="modal fade" id="tambah">
-						<div class="modal-dialog modal-lg">
-							<div class="modal-content">
-								<div class="modal-header">
-									<h4 class="modal-title">Tambah</h4>
-									<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-										<span aria-hidden="true">&times;</span>
-									</button>
-								</div>
-								<div class="modal-body">
-									<form role="form" enctype="multipart/form-data" method="post" action="/insert/penelitian/patenhki">
-										<div class="form-group">
-											<p>
-											<label>Jenis<span class="text-danger"> *</span></label>
-											<select class='form-control' name='id_jenis' required>
-												<option value=''>-- Pilih --</option>
-												<?php
-													$qjenis = mysqli_query($con,"SELECT * FROM kode WHERE kelompok='patenhki' ORDER BY value");
-													while($jenis=mysqli_fetch_array($qjenis)) {
-														echo"
-															<option value='$jenis[value]'>$jenis[desc]</option>
-														";
-													}
-												?>
-											</select>
-											</p>
-											<p>
-											<label>Judul Paten<span class="text-danger"> *</span></label>
-											<input name="judul" type="text" class="form-control" placeholder="Silakan diisi" required>
-											</p>
-											<p>
-											<label>Tanggal Paten (<?php echo $tgl_start; ?> - <?php echo $tgl_end; ?>)<span class="text-danger"> *</span></label>
-											<input name="tgl_paten" type="date" class="form-control" min="<?php echo $tgl_start; ?>" max="<?php echo $tgl_end; ?>" required>
-											</p>
-											<p>
-											<label>Nomor Paten<span class="text-danger"> *</span></label>
-											<input name="nomor" type="text" class="form-control" placeholder="Silakan diisi" required>
-											</p>
-											<p>
-											<label>Negara/Otoritas Pemberi</label>
-											<input name="pemberi" type="text" class="form-control" placeholder="Silakan diisi">
-											</p>
-											<p>
-											<label>Tingkat Kesiapan Teknologi (TKT)</label>
-											<select class='form-control' name='id_tkt' required>
-												<option value=''>-- Pilih --</option>
-												<?php
-													$qtkt= mysqli_query($con,"SELECT * FROM kode WHERE kelompok='tkt' ORDER BY value");
-													while($tkt=mysqli_fetch_array($qtkt)) {
-														echo"
-															<option value='$tkt[value]'>$tkt[desc]</option>
-														";
-													}
-												?>
-											</select>
-											</p>
-											<p>
-											<label>Penelitian yang Berkaitan Langsung</label>
-											<select class='form-control' name='link_lit'>
-												<option value=''>-- Pilih --</option>
-												<?php
-													$qlit= mysqli_query($con,"SELECT * FROM penelitian_penelitian WHERE nip_dosen='$_SESSION[ses_user]' ORDER BY id");
-													while($lit=mysqli_fetch_array($qlit)) {
-														echo"
-															<option value='$lit[id]'>$lit[judul_kegiatan]</option>
-														";
-													}
-												?>
-											</select>
-											</p>
-											<p>
-											<label>Pengabdian yang Berkaitan Langsung</label>
-											<select class='form-control' name='link_abmas'>
-												<option value=''>-- Pilih --</option>
-												<?php
-													$qabmas= mysqli_query($con,"SELECT * FROM pengabdian_pengabdian WHERE nip_dosen='$_SESSION[ses_user]' ORDER BY id");
-													while($abmas=mysqli_fetch_array($qabmas)) {
-														echo"
-															<option value='$abmas[id]'>$abmas[judul_kegiatan]</option>
-														";
-													}
-												?>
-											</select>
-											</p>
-											<p>
-											<label>Jenis File<span class="text-danger"> *</span></label>
-											<select class='form-control' name='jenis_file' required>
-												<option value=''>-- Pilih --</option>
-												<?php
-													$qkode3 = mysqli_query($con,"SELECT * FROM kode WHERE kelompok='file_patenhki' ORDER BY id");
-													while($kode3=mysqli_fetch_array($qkode3)) {
-														echo"
-															<option value='$kode3[value]'>$kode3[desc]</option>
-														";
-													}
-												?>
-											</select>
-											</p>
-											<p>
-											<label>File<span class="text-danger"> *</span></label>
-											<input name="file" type="file" class="form-control" accept=".pdf,.png,.jpg,.jpeg" required>
-											</p>
 
-										</div>
-								</div>
-								<div class="modal-footer justify-content-between">
-									<input type="submit" class="btn btn-primary" value="Tambah">
-								</div>
-								</form>
-							</div>
-						</div>
-			  	        </div>
-
+					<?php include "form/patenhki/tambah.php"; ?>
 
 				</div>
 			</div>
-<?php		
-		break;
-	
-		case 'edit':
 
-		break;
+			<script>
+				$(function () {
+					$("#tabel-patenhki").DataTable({
+						"responsive": true,
+						"lengthChange": true,
+						"autoWidth": false,
+						"info": true,
+						"searching": true,
+						"scrollX": true,
+						"language": {
+							"emptyTable": "<p class='text-center text-danger mb-0'>Tidak ada data pada semester/TA yang dipilih</p>"
+						},
+						"buttons": [
+							{ extend: 'copy', className: 'btn btn-secondary btn-sm', text: '<i class="fas fa-copy"></i> Copy' },
+							{ extend: 'csv', className: 'btn btn-info btn-sm text-white', text: 'CSV' },
+							{ extend: 'excel', className: 'btn btn-success btn-sm', text: 'Excel' },
+							{ extend: 'pdf', className: 'btn btn-danger btn-sm', text: 'PDF' },
+							{ extend: 'print', className: 'btn btn-secondary btn-sm', text: '<i class="fas fa-print"></i> Cetak' }
+						]
+					}).buttons().container().appendTo('#tabel-patenhki_wrapper .col-md-6:eq(0)');
+				});
+			</script>
+			<?php
+			break;
+
+		case 'edit':
+			include "form/patenhki/edit.php";
+			break;
+
+		case 'anggota':
+			include "anggota/patenhki.php";
+			break;
+
+		case 'validasi':
+			include "validasi/patenhki.php";
+			break;
+
 
 	}
 }

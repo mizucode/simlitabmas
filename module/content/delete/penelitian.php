@@ -3,7 +3,8 @@ if (empty($_SESSION['ses_user']) AND empty($_SESSION['ses_pass']) AND empty($_SE
 	header('location:/login');
 } else {
 	if (@$folder[3] == 'penelitian') {
-		$id = mysqli_real_escape_string($con, @$folder[4]);
+		$id_raw = explode('?', @$folder[4])[0];
+		$id = mysqli_real_escape_string($con, $id_raw);
 		
 		// Ambil judul kegiatan untuk menghapus duplikat dan relasi anggotanya
 		$judul_kegiatan = '';
@@ -45,7 +46,8 @@ if (empty($_SESSION['ses_user']) AND empty($_SESSION['ses_pass']) AND empty($_SE
 			header('location:/penelitian/penelitian/?m=not_deleted');
 		}
 	} elseif (@$folder[3] == 'anggota') {
-		$id_regis = mysqli_real_escape_string($con, @$folder[4]);
+		$id_raw = explode('?', @$folder[4])[0];
+		$id_regis = mysqli_real_escape_string($con, $id_raw);
 		
 		$q = mysqli_query($con, "SELECT id_porto, nik FROM regis_dosen_penelitian WHERE id='$id_regis'");
 		if ($row = mysqli_fetch_array($q)) {
@@ -81,10 +83,72 @@ if (empty($_SESSION['ses_user']) AND empty($_SESSION['ses_pass']) AND empty($_SE
 			header("location:/penelitian/penelitian");
 		}
 	} elseif (@$folder[3] == 'patenhki') {
-		// Logika delete untuk patenhki jika diperlukan
-		$id = mysqli_real_escape_string($con, @$folder[4]);
-		// mysqli_query($con, "DELETE FROM tabel_patenhki WHERE id='$id'");
-		header('location:/penelitian/penelitian/?m=deleted');
+		$id_raw = explode('?', @$folder[4])[0];
+		$id = mysqli_real_escape_string($con, $id_raw);
+		
+		$judul_kegiatan = '';
+		$q_orig = mysqli_query($con, "SELECT judul FROM penelitian_patenhki WHERE id = '$id'");
+		if ($orig = mysqli_fetch_array($q_orig)) {
+			$judul_kegiatan = mysqli_real_escape_string($con, $orig['judul']);
+		}
+		
+		$qfile = mysqli_query($con, "SELECT url FROM file_dosen WHERE id_cat='$id' AND kelompok='file_patenhki'");
+		while ($rf = mysqli_fetch_array($qfile)) {
+			if (file_exists($rf['url'])) @unlink($rf['url']);
+		}
+		mysqli_query($con, "DELETE FROM file_dosen WHERE id_cat='$id' AND kelompok='file_patenhki'");
+		
+		$q_anggota = mysqli_query($con, "SELECT id, nik FROM regis_dosen_penelitian WHERE id_porto='$id' AND jenis_porto='patenhki'");
+		while ($r_anggota = mysqli_fetch_array($q_anggota)) {
+			$nik_anggota = $r_anggota['nik'];
+			$qfile_a = mysqli_query($con, "SELECT url FROM file_dosen WHERE id_cat='$id' AND nip_dosen='$nik_anggota' AND kelompok='file_patenhki'");
+			while ($rfa = mysqli_fetch_array($qfile_a)) {
+				if (file_exists($rfa['url'])) @unlink($rfa['url']);
+			}
+			mysqli_query($con, "DELETE FROM file_dosen WHERE id_cat='$id' AND nip_dosen='$nik_anggota' AND kelompok='file_patenhki'");
+		}
+		mysqli_query($con, "DELETE FROM regis_dosen_penelitian WHERE id_porto='$id' AND jenis_porto='patenhki'");
+
+		if (mysqli_query($con, "DELETE FROM penelitian_patenhki WHERE id='$id'")) {
+			if (!empty($judul_kegiatan)) {
+				mysqli_query($con, "DELETE FROM penelitian_patenhki WHERE judul='$judul_kegiatan'");
+			}
+			header('location:/penelitian/patenhki/?m=deleted');
+		} else {
+			header('location:/penelitian/patenhki/?m=not_deleted');
+		}
+	} elseif (@$folder[3] == 'anggota_patenhki') {
+		$id_raw = explode('?', @$folder[4])[0];
+		$id_regis = mysqli_real_escape_string($con, $id_raw);
+		
+		$q = mysqli_query($con, "SELECT id_porto, nik FROM regis_dosen_penelitian WHERE id='$id_regis'");
+		if ($row = mysqli_fetch_array($q)) {
+			$id_porto = $row['id_porto'];
+			$nik = $row['nik'];
+			
+			$judul_kegiatan = '';
+			$q_orig = mysqli_query($con, "SELECT judul FROM penelitian_patenhki WHERE id = '$id_porto'");
+			if ($orig = mysqli_fetch_array($q_orig)) {
+				$judul_kegiatan = mysqli_real_escape_string($con, $orig['judul']);
+			}
+			
+			$qfile = mysqli_query($con, "SELECT url FROM file_dosen WHERE id_cat='$id_porto' AND nip_dosen='$nik' AND kelompok='file_patenhki'");
+			while ($rf = mysqli_fetch_array($qfile)) {
+				if (file_exists($rf['url'])) @unlink($rf['url']);
+			}
+			mysqli_query($con, "DELETE FROM file_dosen WHERE id_cat='$id_porto' AND nip_dosen='$nik' AND kelompok='file_patenhki'");
+			
+			if (mysqli_query($con, "DELETE FROM regis_dosen_penelitian WHERE id='$id_regis'")) {
+				if (!empty($judul_kegiatan)) {
+					mysqli_query($con, "DELETE FROM penelitian_patenhki WHERE judul = '$judul_kegiatan' AND nip_dosen = '$nik' AND id != '$id_porto'");
+				}
+				header("location:/penelitian/patenhki/anggota/$id_porto?m=deleted");
+			} else {
+				header("location:/penelitian/patenhki/anggota/$id_porto?m=not_deleted");
+			}
+		} else {
+			header("location:/penelitian/patenhki");
+		}
 	} else {
 		header('location:/penelitian/penelitian');
 	}

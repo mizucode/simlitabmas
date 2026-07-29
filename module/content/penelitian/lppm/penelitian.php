@@ -84,8 +84,20 @@ if (empty($_SESSION['ses_user']) AND empty($_SESSION['ses_pass']) AND empty($_SE
 						<div class="card-header">
 							<h3 class="card-title">Kegiatan Penelitian</h3>
 							<div class="card-tools">
+
+								<?php
+								$q_pending = mysqli_query($con, "SELECT COUNT(*) as jml FROM penelitian_penelitian WHERE (status='1' OR status IS NULL OR status='') AND tgl_mulai_kegiatan>='$tgl_start' AND tgl_mulai_kegiatan<='$tgl_end'");
+								$r_pending = mysqli_fetch_assoc($q_pending);
+								$jml_pending = $r_pending['jml'];
+								?>
+								<a href="/penelitian/<?= $folder[2] ?>/validasi/<?= @$folder[3] ?>" class="btn btn-info">
+									Perlu Validasi
+									<?php if ($jml_pending > 0) { ?>
+										<span class="badge badge-danger"><?= $jml_pending ?></span>
+									<?php } ?>
+								</a>
 								<button type="button" class="btn btn-warning" data-toggle="modal" data-target="#tambah"><i
-										class="fas fa-plus"></i> Tambah</button>
+										class="fas fa-plus"></i> Tambah Penelitian</button>
 								<!--					                      <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#tambah"><i class="fas fa-plus"></i> File</button>
 																<button type="button" class="btn btn-warning" data-toggle="modal" data-target="#tambah"><i class="fas fa-plus"></i> Peran</button>
 !-->
@@ -93,7 +105,7 @@ if (empty($_SESSION['ses_user']) AND empty($_SESSION['ses_pass']) AND empty($_SE
 						</div>
 						<div class="card-body p-3">
 							<table id="tabel-penelitian"
-								class="table table-bordered table-hover table-striped text-nowrap table-responsive w-100"
+								class="table table-bordered table-hover table-striped text-nowrap w-100"
 								style="font-size: 0.9rem;">
 								<thead class="bg-white text-center align-middle">
 									<tr>
@@ -109,17 +121,8 @@ if (empty($_SESSION['ses_user']) AND empty($_SESSION['ses_pass']) AND empty($_SE
 								<tbody>
 									<?php
 									$no = 1;
-									$q = mysqli_query($con, "SELECT * FROM penelitian_penelitian,dosen WHERE penelitian_penelitian.nip_dosen=dosen.nik AND tgl_mulai_kegiatan>='$tgl_start' AND tgl_mulai_kegiatan<='$tgl_end' ORDER BY penelitian_penelitian.id_skema,penelitian_penelitian.judul_kegiatan ");
-									if (mysqli_num_rows($q) < 1) {
-										?>
-										<tr>
-											<td colspan='6'>
-												<p class='text-center text-danger'>Tidak ada data pada semester/TA yang dipilih</p>
-											</td>
-										</tr>
-										<?php
-									} else {
-
+									$q = mysqli_query($con, "SELECT * FROM penelitian_penelitian,dosen WHERE penelitian_penelitian.nip_dosen=dosen.nik AND penelitian_penelitian.status='2' AND tgl_mulai_kegiatan>='$tgl_start' AND tgl_mulai_kegiatan<='$tgl_end' ORDER BY penelitian_penelitian.id_skema,penelitian_penelitian.judul_kegiatan ");
+									if (mysqli_num_rows($q) > 0) {
 										while ($r = mysqli_fetch_array($q)) {
 											$skema = mysqli_fetch_array(mysqli_query($con, "SELECT * FROM kode WHERE value='{$r['id_skema']}' AND kelompok='skema_penelitian' LIMIT 1"));
 
@@ -199,8 +202,8 @@ if (empty($_SESSION['ses_user']) AND empty($_SESSION['ses_pass']) AND empty($_SE
 																						<td class="align-middle"><?= $type ?></td>
 																						<td class="align-middle"><?= $rf['name_glr'] ?></td>
 																						<td class="text-center align-middle">
-																							<a href="<?= $storage_url . $rf['url_file'] ?>" target="_blank" class="btn btn-xs btn-primary"><i
-																									class="fas fa-download"></i> Unduh</a>
+																							<a href="<?= $storage_url . $rf['url_file'] ?>" target="_blank"
+																								class="btn btn-xs btn-primary"><i class="fas fa-download"></i> Unduh</a>
 																						</td>
 																					</tr>
 																					<?php
@@ -246,6 +249,10 @@ if (empty($_SESSION['ses_user']) AND empty($_SESSION['ses_pass']) AND empty($_SE
 						"lengthChange": false,
 						"info": true,
 						"searching": true,
+						"scrollX": true,
+						"language": {
+							"emptyTable": "<p class='text-center text-danger mb-0'>Tidak ada data pada semester/TA yang dipilih</p>"
+						},
 						"buttons": [
 							{ extend: 'copy', className: 'btn btn-secondary btn-sm', text: '<i class="fas fa-copy"></i> Copy' },
 							{ extend: 'csv', className: 'btn btn-info btn-sm text-white', text: 'CSV' },
@@ -265,6 +272,10 @@ if (empty($_SESSION['ses_user']) AND empty($_SESSION['ses_pass']) AND empty($_SE
 
 		case 'anggota':
 			include "anggota/penelitian.php";
+			break;
+
+		case 'validasi':
+			include "validasi/penelitian.php";
 			break;
 
 	}
