@@ -131,6 +131,30 @@ if (empty($_SESSION['ses_user']) AND empty($_SESSION['ses_pass']) AND empty($_SE
 	} elseif (@$folder[3] == 'patenhki') {
 		// Logika update untuk patenhki jika diperlukan
 		header('location:/penelitian/penelitian/?m=updated');
+	} elseif (@$folder[3] == 'karya') {
+		$id = mysqli_real_escape_string($con, $_POST['id']);
+		$judul = mysqli_real_escape_string($con, $_POST['judul']);
+		$id_jenis = mysqli_real_escape_string($con, $_POST['id_jenis']);
+		$tgl_terbit = mysqli_real_escape_string($con, $_POST['tgl_terbit']);
+		$link_lit = mysqli_real_escape_string($con, $_POST['link_lit']);
+		$link_abmas = mysqli_real_escape_string($con, $_POST['link_abmas']);
+		$redirect = isset($_POST['redirect']) ? $_POST['redirect'] : '/penelitian/karya';
+
+		$query = "UPDATE penelitian_karya SET 
+			judul='$judul',
+			id_jenis='$id_jenis',
+			tgl_terbit='$tgl_terbit',
+			link_lit='$link_lit',
+			link_abmas='$link_abmas',
+			date_modif=CURDATE(),
+			time_modif=CURTIME()
+			WHERE id='$id'";
+
+		if (mysqli_query($con, $query)) {
+			header("location:" . $redirect . "?m=updated");
+		} else {
+			header("location:" . $redirect . "?m=not_updated");
+		}
 	} elseif (@$folder[3] == 'anggota_patenhki') {
 		$id_regis = mysqli_real_escape_string($con, $_POST['id_regis']);
 		$id_porto = mysqli_real_escape_string($con, $_POST['id_porto']);
@@ -166,6 +190,42 @@ if (empty($_SESSION['ses_user']) AND empty($_SESSION['ses_pass']) AND empty($_SE
 			header("location:/penelitian/patenhki/anggota/$id_porto?m=updated");
 		} else {
 			header("location:/penelitian/patenhki/anggota/$id_porto?m=not_updated");
+		}
+	} elseif (@$folder[3] == 'anggota_karya') {
+		$id_regis = mysqli_real_escape_string($con, $_POST['id_regis']);
+		$id_porto = mysqli_real_escape_string($con, $_POST['id_porto']);
+		$role = mysqli_real_escape_string($con, $_POST['role']);
+		$type_file = mysqli_real_escape_string($con, $_POST['type_file']);
+		
+		if (!empty($_FILES['file']['name'])) {
+			$file_name = $_FILES['file']['name'];
+			$ext = pathinfo($file_name, PATHINFO_EXTENSION);
+			$new_name = "anggota_karya_" . $id_porto . "_" . time() . "." . $ext;
+			UploadKarya($new_name);
+			$path = "file/karya/" . $new_name;
+
+			$qnik = mysqli_query($con, "SELECT nik FROM regis_dosen_penelitian WHERE id='$id_regis'");
+			$dnik = mysqli_fetch_array($qnik);
+			$nik_anggota = $dnik['nik'];
+			
+			// Hapus file lama jika ada (berdasarkan id_porto dan nip_dosen)
+			$q_old_file = mysqli_query($con, "SELECT url FROM file_dosen WHERE id_cat='$id_porto' AND nip_dosen='$nik_anggota' AND kelompok='file_karya'");
+			while ($r_old = mysqli_fetch_array($q_old_file)) {
+				if (file_exists($r_old['url'])) @unlink($r_old['url']);
+			}
+			mysqli_query($con, "DELETE FROM file_dosen WHERE id_cat='$id_porto' AND nip_dosen='$nik_anggota' AND kelompok='file_karya'");
+
+			$tgl_sekarang = date('Y-m-d');
+			$jam_sekarang = date('H:i:s');
+			mysqli_query($con, "INSERT INTO file_dosen (id_cat, nip_dosen, kelompok, value_kode, url, date_modif, time_modif) VALUES ('$id_porto', '$nik_anggota', 'file_karya', '$type_file', '$path', '$tgl_sekarang', '$jam_sekarang')");
+		}
+
+		$query = "UPDATE regis_dosen_penelitian SET role = '$role', type_file = '$type_file' WHERE id = '$id_regis'";
+
+		if (mysqli_query($con, $query)) {
+			header("location:/penelitian/karya/anggota/$id_porto?m=updated");
+		} else {
+			header("location:/penelitian/karya/anggota/$id_porto?m=not_updated");
 		}
 	} else {
 		header('location:/penelitian/penelitian');

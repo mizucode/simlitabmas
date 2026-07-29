@@ -32,8 +32,23 @@ Dokumen ini berisi rangkuman perubahan yang telah kita lakukan pada fitur **Pate
 
 ---
 
+## 4. Refactoring Fitur Karya Tanpa HKI
+**Masalah & Perbaikan yang dilakukan:**
+- **Penambahan Kolom Database:** Menambahkan kolom `status` (ENUM) dan `keterangan_validasi` (TEXT) pada tabel `penelitian_karya` untuk mendukung proses validasi dari pihak LPPM (disetujui/ditolak/pending).
+- **Logika Insert Dosen:** 
+  - File: `universe/module/content/insert/dosen.php`
+  - *Refactor:* Mengubah logika `insert` karya agar mengecek duplikat judul. Jika sudah ada, dosen akan dimasukkan ke tabel *pivot* `regis_dosen_penelitian` sebagai anggota. Selain itu, menyesuaikan pemanggilan fungsi upload menjadi `UploadKarya()`.
+- **Perbaikan UI & Select2 pada Form Input:**
+  - File: `universe/module/content/penelitian/karya.php` dan `simlitabmas/module/content/penelitian/lppm/form/karya/edit.php`
+  - *Refactor:* Mengubah `class` pada form *dropdown* tautan penelitian/pengabdian menjadi `select2-link` yang seragam dan bisa di-search.
+- **Pencegahan Fatal Error (Blank Page) di Dashboard Dosen:**
+  - File: `universe/module/content/penelitian/karya.php`
+  - *Refactor:* Menyesuaikan query *Penelitian yang Berkaitan Langsung* menjadi `WHERE nip_dosen='{$_SESSION['ses_user']}'` (hanya menampilkan kegiatan milik dosen yang bersangkutan) tanpa menggunakan pemanggilan kolom `status` pada tabel ekstensi yang berpotensi memicu *Fatal Error* di environment Universe.
+
+---
+
 ### Langkah Berikutnya (*Next Steps*)
-Jika nanti kita akan melakukan *refactoring* pada fitur penelitian lain seperti **Karya Tanpa HKI**, **Jurnal**, atau **Prosiding**, kita dapat mengacu pada pola perbaikan yang sama:
+Jika nanti kita akan melakukan *refactoring* pada fitur penelitian lain seperti **Jurnal** atau **Prosiding**, kita dapat mengacu pada pola perbaikan yang sama:
 1. Pastikan *prefix parameter kelompok* untuk relasi ke tabel `kode` sudah benar.
 2. Buat fungsi `Upload...()` tersendiri di `config/upload.php` (baik di sisi admin maupun dosen) beserta penyesuaian *API Key* jika diperlukan.
 3. Sesuaikan alur `insert` dan `update` agar menggunakan path direktori spesifik (misal: `file/jurnal/`).

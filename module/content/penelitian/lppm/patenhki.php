@@ -108,7 +108,7 @@ if (empty($_SESSION['ses_user']) AND empty($_SESSION['ses_pass']) AND empty($_SE
 								<thead class="bg-white text-center align-middle">
 									<tr>
 										<th class="align-middle" style="width: 50px;">No</th>
-										<th>Tim Dosen Peneliti</th>
+										<th>Tim HKI</th>
 										<th>Ketua</th>
 										<th>Jenis</th>
 										<th>Nama</th>
@@ -187,8 +187,9 @@ if (empty($_SESSION['ses_user']) AND empty($_SESSION['ses_pass']) AND empty($_SE
 																		</button>
 																	</div>
 																	<div class="modal-body">
-																		<table class="table table-bordered text-sm mb-0">
-																			<thead class="bg-light">
+																		<div class="table-responsive">
+																			<table class="table table-bordered text-sm mb-0">
+																				<thead class="bg-light">
 																				<tr>
 																					<th>Nama Dokumen</th>
 																					<th>Keterangan</th>
@@ -216,6 +217,7 @@ if (empty($_SESSION['ses_user']) AND empty($_SESSION['ses_pass']) AND empty($_SE
 																				?>
 																			</tbody>
 																		</table>
+																		</div>
 																	</div>
 																</div>
 															</div>

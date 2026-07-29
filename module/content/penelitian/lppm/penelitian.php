@@ -110,7 +110,7 @@ if (empty($_SESSION['ses_user']) AND empty($_SESSION['ses_pass']) AND empty($_SE
 								<thead class="bg-white text-center align-middle">
 									<tr>
 										<th class="align-middle" style="width: 50px;">No</th>
-										<th>Tim Dosen Peneliti</th>
+										<th>Tim Peneliti</th>
 										<th>Ketua</th>
 										<th>Judul Kegiatan</th>
 										<th>Skema</th>

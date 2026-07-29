@@ -88,11 +88,16 @@
 					$d_pending_paten = mysqli_fetch_assoc($q_pending_paten);
 					$jml_pending_paten = $d_pending_paten['jml'];
 
-					$total_pending = $jml_pending + $jml_pending_paten;
+					$q_pending_karya = mysqli_query($con, "SELECT COUNT(id) AS jml FROM penelitian_karya WHERE status='1' OR status IS NULL OR status=''");
+					$d_pending_karya = mysqli_fetch_assoc($q_pending_karya);
+					$jml_pending_karya = $d_pending_karya['jml'];
+
+					$total_pending = $jml_pending + $jml_pending_paten + $jml_pending_karya;
 					
 					$badge_total_pending = ($total_pending > 0) ? "<span class='badge badge-danger right' style='margin-right: 20px;'>{$total_pending}</span>" : "";
 					$badge_pending_child = ($jml_pending > 0) ? "<span class='badge badge-danger right'>{$jml_pending}</span>" : "";
 					$badge_pending_paten = ($jml_pending_paten > 0) ? "<span class='badge badge-danger right'>{$jml_pending_paten}</span>" : "";
+					$badge_pending_karya = ($jml_pending_karya > 0) ? "<span class='badge badge-danger right'>{$jml_pending_karya}</span>" : "";
 					?>
 					<li class='nav-item has-treeview'>
 						<a href='#' class='nav-link'>
@@ -108,7 +113,7 @@
 									<p>Paten dan HKI <?php echo $badge_pending_paten; ?></p>
 								</a></li>
 							<li class='nav-item'><a href='/penelitian/karya' class='nav-link'><i class='nav-icon far fa-circle'></i>
-									<p>Karya Tanpa HKI</p>
+									<p>Karya Tanpa HKI <?php echo $badge_pending_karya; ?></p>
 								</a></li>
 							<li class="nav-header">PUBLIKASI</li>
 							<li class='nav-item'><a href='/penelitian/jurnal' class='nav-link'><i class='nav-icon far fa-circle'></i>

@@ -240,10 +240,11 @@ if (empty($_SESSION['ses_user']) AND empty($_SESSION['ses_pass']) AND empty($_SE
 				header('location:/penelitian/patenhki/?m=not_inserted');
 			}
 		} else {
+			$status_paten = ($_SESSION['ses_level'] == 'lppm' || $_SESSION['ses_level'] == 'admin') ? '2' : '1';
 			$query = "INSERT INTO penelitian_patenhki (
 				nip_dosen, id_jenis, judul, tgl_paten, nomor, pemberi, id_tkt, link_lit, link_abmas, date_modif, time_modif, status
 			) VALUES (
-				'$nip_dosen', '$id_jenis', '$judul', '$tgl_paten', '$nomor', '$pemberi', '$id_tkt', '$link_lit', '$link_abmas', CURDATE(), CURTIME(), '1'
+				'$nip_dosen', '$id_jenis', '$judul', '$tgl_paten', '$nomor', '$pemberi', '$id_tkt', '$link_lit', '$link_abmas', CURDATE(), CURTIME(), '$status_paten'
 			)";
 			if (mysqli_query($con, $query)) {
 				$id_cat = mysqli_insert_id($con);
@@ -267,6 +268,79 @@ if (empty($_SESSION['ses_user']) AND empty($_SESSION['ses_pass']) AND empty($_SE
 				header('location:/penelitian/patenhki/?m=inserted');
 			} else {
 				header('location:/penelitian/patenhki/?m=not_inserted');
+			}
+		}
+	} elseif (@$folder[3] == 'karya') {
+		if (isset($_POST['nip_dosen']) && !empty($_POST['nip_dosen'])) {
+			$nip_dosen = mysqli_real_escape_string($con, $_POST['nip_dosen']);
+		} else {
+			$nip_dosen = mysqli_real_escape_string($con, @$_SESSION['ses_user']);
+		}
+		$id_jenis = mysqli_real_escape_string($con, $_POST['id_jenis']);
+		$judul = mysqli_real_escape_string($con, $_POST['judul']);
+		$tgl_terbit = mysqli_real_escape_string($con, $_POST['tgl_terbit']);
+		$link_lit = mysqli_real_escape_string($con, @$_POST['link_lit']);
+		$link_abmas = mysqli_real_escape_string($con, @$_POST['link_abmas']);
+		$jenis_file = mysqli_real_escape_string($con, $_POST['jenis_file']);
+		
+		$tgl_sekarang = date('Y-m-d');
+		$jam_sekarang = date('H:i:s');
+		
+		$q_check = mysqli_query($con, "SELECT id FROM penelitian_karya WHERE judul='$judul'");
+		if (mysqli_num_rows($q_check) > 0) {
+			$d_check = mysqli_fetch_array($q_check);
+			$id_porto = $d_check['id'];
+			
+			$registered_by = mysqli_real_escape_string($con, @$_SESSION['ses_user']);
+			// Insert to pivot as role '1' (Ketua) default
+			$query_pivot = "INSERT INTO regis_dosen_penelitian (
+				id_porto, nik, role, jenis_porto, date_regis, time_regis, type_file, registered_by
+			) VALUES (
+				'$id_porto', '$nip_dosen', '1', 'karya', '$tgl_sekarang', '$jam_sekarang', '$jenis_file', '$registered_by'
+			)";
+			
+			if (mysqli_query($con, $query_pivot)) {
+				if (!empty($_FILES['file']['name'])) {
+					$file_name = $_FILES['file']['name'];
+					$ext = pathinfo($file_name, PATHINFO_EXTENSION);
+					$new_name = "anggota_karya_" . $id_porto . "_" . time() . "." . $ext;
+					UploadKarya($new_name);
+					$path = "file/karya/" . $new_name;
+					mysqli_query($con, "INSERT INTO file_dosen (id_cat, nip_dosen, kelompok, value_kode, url, date_modif, time_modif) VALUES ('$id_porto', '$nip_dosen', 'file_karya', '$jenis_file', '$path', '$tgl_sekarang', '$jam_sekarang')");
+				}
+				header('location:/penelitian/karya/?m=inserted');
+			} else {
+				header('location:/penelitian/karya/?m=not_inserted');
+			}
+		} else {
+			$status_karya = ($_SESSION['ses_level'] == 'lppm' || $_SESSION['ses_level'] == 'admin') ? '2' : '1';
+			$query = "INSERT INTO penelitian_karya (
+				nip_dosen, id_jenis, judul, tgl_terbit, link_lit, link_abmas, date_modif, time_modif, status
+			) VALUES (
+				'$nip_dosen', '$id_jenis', '$judul', '$tgl_terbit', '$link_lit', '$link_abmas', CURDATE(), CURTIME(), '$status_karya'
+			)";
+			if (mysqli_query($con, $query)) {
+				$id_cat = mysqli_insert_id($con);
+				
+				$registered_by = mysqli_real_escape_string($con, @$_SESSION['ses_user']);
+				$query_pivot_new = "INSERT INTO regis_dosen_penelitian (
+					id_porto, nik, role, jenis_porto, date_regis, time_regis, type_file, registered_by
+				) VALUES (
+					'$id_cat', '$nip_dosen', '1', 'karya', '$tgl_sekarang', '$jam_sekarang', '$jenis_file', '$registered_by'
+				)";
+				mysqli_query($con, $query_pivot_new);
+				
+				if (!empty($_FILES['file']['name'])) {
+					$file_name = $_FILES['file']['name'];
+					$ext = pathinfo($file_name, PATHINFO_EXTENSION);
+					$new_name = "karya_" . $id_cat . "_" . time() . "." . $ext;
+					UploadKarya($new_name);
+					$path = "file/karya/" . $new_name;
+					mysqli_query($con, "INSERT INTO file_dosen (id_cat, nip_dosen, kelompok, value_kode, url, date_modif, time_modif) VALUES ('$id_cat', '$nip_dosen', 'file_karya', '$jenis_file', '$path', '$tgl_sekarang', '$jam_sekarang')");
+				}
+				header('location:/penelitian/karya/?m=inserted');
+			} else {
+				header('location:/penelitian/karya/?m=not_inserted');
 			}
 		}
 	} elseif (@$folder[3] == 'anggota_patenhki') {
@@ -305,6 +379,43 @@ if (empty($_SESSION['ses_user']) AND empty($_SESSION['ses_pass']) AND empty($_SE
 			header("location:/penelitian/patenhki/anggota/$id_porto?m=inserted");
 		} else {
 			header("location:/penelitian/patenhki/anggota/$id_porto?m=not_inserted");
+		}
+	} elseif (@$folder[3] == 'anggota_karya') {
+		$id_porto = mysqli_real_escape_string($con, $_POST['id_porto']);
+		$nik = mysqli_real_escape_string($con, $_POST['nik']);
+		$role = mysqli_real_escape_string($con, $_POST['role']);
+		$jenis_porto = 'karya';
+		$date_regis = date('Y-m-d');
+		$time_regis = date('H:i:s');
+		
+		$type_file = mysqli_real_escape_string($con, $_POST['type_file']);
+		
+		$path_file = '';
+		if (!empty($_FILES['file']['name'])) {
+			$file_name = $_FILES['file']['name'];
+			$ext = pathinfo($file_name, PATHINFO_EXTENSION);
+			$new_name = "anggota_karya_" . $id_porto . "_" . time() . "." . $ext;
+			UploadKarya($new_name);
+			$path_file = "file/karya/" . $new_name;
+		}
+		
+		$registered_by = mysqli_real_escape_string($con, $_SESSION['ses_user']);
+		
+		$query = "INSERT INTO regis_dosen_penelitian (
+			id_porto, nik, role, jenis_porto, date_regis, time_regis, type_file, registered_by
+		) VALUES (
+			'$id_porto', '$nik', '$role', '$jenis_porto', '$date_regis', '$time_regis', '$type_file', '$registered_by'
+		)";
+		
+		if (mysqli_query($con, $query)) {
+			$id_regis = mysqli_insert_id($con);
+			if (!empty($path_file)) {
+				mysqli_query($con, "INSERT INTO file_dosen (id_cat, nip_dosen, kelompok, value_kode, url, date_modif, time_modif) VALUES ('$id_porto', '$nik', 'file_karya', '$type_file', '$path_file', '$date_regis', '$time_regis')");
+			}
+			
+			header("location:/penelitian/karya/anggota/$id_porto?m=inserted");
+		} else {
+			header("location:/penelitian/karya/anggota/$id_porto?m=not_inserted");
 		}
 	} else {
 		header('location:/penelitian/penelitian');

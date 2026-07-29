@@ -110,7 +110,6 @@ if (!$porto) {
                 <th class="align-middle" style="width: 50px;">No</th>
                 <th class="align-middle">NIK</th>
                 <th class="align-middle">Nama Dosen & Gelar</th>
-                <th class="align-middle">Peran</th>
                 <th class="align-middle">File Lampiran</th>
                 <th class="align-middle">Tanggal Regis</th>
                 <th class="text-center align-middle" style="width: 80px;">Aksi</th>
@@ -143,9 +142,6 @@ if (!$porto) {
                     <td class="text-center align-middle"><?= $no ?></td>
                     <td class="align-middle"><?= $row['nik'] ?></td>
                     <td class="align-middle"><span class="text-dark"><?= $row['name_glr'] ?></span><?= $prodi_str ?></td>
-                    <td class="align-middle text-center">
-                      <?= !empty($row['peran_desc']) ? $row['peran_desc'] : $row['role'] ?>
-                    </td>
                     <td class="align-middle text-center">
                       <?php if (!empty($row['url_file'])): ?>
                         <a href="<?= @$storage_url . $row['url_file'] ?>" target="_blank" class="btn btn-xs btn-primary">
@@ -190,19 +186,7 @@ if (!$porto) {
                               <input type="text" class="form-control"
                                 value="<?= $row['nik'] ?> - <?= htmlspecialchars($row['name_glr'], ENT_QUOTES) ?>" readonly>
                             </div>
-                            <div class="form-group">
-                              <label>Peran <span class="text-danger">*</span></label>
-                              <select class="form-control" name="role" required>
-                                <option value="">-- Pilih --</option>
-                                <?php
-                                $qperan = mysqli_query($con, "SELECT * FROM kode WHERE kelompok='peran_penelitian' ORDER BY id");
-                                while ($kp = mysqli_fetch_array($qperan)) {
-                                  $sel = ($row['role'] == $kp['value'] || $row['role'] == $kp['desc']) ? 'selected' : '';
-                                  echo "<option value='{$kp['value']}' {$sel}>{$kp['desc']}</option>";
-                                }
-                                ?>
-                              </select>
-                            </div>
+                            <input type="hidden" name="role" value="2">
                             <div class="form-group">
                               <label>Jenis File <span class="text-danger">*</span></label>
                               <select class="form-control" name="type_file" required>
@@ -328,18 +312,7 @@ if (!$porto) {
               ?>
             </select>
           </div>
-          <div class="form-group">
-            <label>Peran <span class="text-danger">*</span></label>
-            <select class="form-control" name="role" required>
-              <option value="">-- Pilih --</option>
-              <?php
-              $qperan = mysqli_query($con, "SELECT * FROM kode WHERE kelompok='peran_penelitian' ORDER BY id");
-              while ($kp = mysqli_fetch_array($qperan)) {
-                echo "<option value='{$kp['value']}'>{$kp['desc']}</option>";
-              }
-              ?>
-            </select>
-          </div>
+          <input type="hidden" name="role" value="2">
           <div class="form-group">
             <label>Jenis File <span class="text-danger">*</span></label>
             <select class="form-control" name="type_file" required>

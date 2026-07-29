@@ -108,7 +108,7 @@
 								<option value="">-- Pilih --</option>
 								<?php
 								try {
-									$qabmas = mysqli_query($con, "SELECT id, judul_kegiatan FROM pengabdian_pengabdian WHERE status='2' ORDER BY id DESC LIMIT 500");
+									$qabmas = mysqli_query($con, "SELECT id, judul_kegiatan FROM pengabdian_pengabdian ORDER BY id DESC LIMIT 500");
 									if ($qabmas) {
 										while ($abmas = mysqli_fetch_array($qabmas)) {
 											?>
