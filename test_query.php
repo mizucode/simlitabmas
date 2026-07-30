@@ -1,8 +1,4 @@
 <?php
-require 'config/koneksi.php';
-$q = mysqli_query($con, 'SELECT id, judul_kegiatan FROM pengabdian_pengabdian LIMIT 1');
-if (!$q) {
-    echo "ERROR: " . mysqli_error($con);
-} else {
-    echo "OK";
-}
+$content = file_get_contents('d:/website/kampus/sistem-informasi/simlitabmas/module/content/penelitian/lppm/karya.php');
+// Customize karya to jurnal for the main list file, keeping the Jurnal columns
+?>

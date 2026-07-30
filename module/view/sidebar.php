@@ -92,12 +92,17 @@
 					$d_pending_karya = mysqli_fetch_assoc($q_pending_karya);
 					$jml_pending_karya = $d_pending_karya['jml'];
 
-					$total_pending = $jml_pending + $jml_pending_paten + $jml_pending_karya;
+					$q_pending_jurnal = mysqli_query($con, "SELECT COUNT(id) AS jml FROM penelitian_jurnal WHERE status='1' OR status IS NULL OR status=''");
+					$d_pending_jurnal = mysqli_fetch_assoc($q_pending_jurnal);
+					$jml_pending_jurnal = $d_pending_jurnal['jml'];
+
+					$total_pending = $jml_pending + $jml_pending_paten + $jml_pending_karya + $jml_pending_jurnal;
 					
 					$badge_total_pending = ($total_pending > 0) ? "<span class='badge badge-danger right' style='margin-right: 20px;'>{$total_pending}</span>" : "";
 					$badge_pending_child = ($jml_pending > 0) ? "<span class='badge badge-danger right'>{$jml_pending}</span>" : "";
 					$badge_pending_paten = ($jml_pending_paten > 0) ? "<span class='badge badge-danger right'>{$jml_pending_paten}</span>" : "";
 					$badge_pending_karya = ($jml_pending_karya > 0) ? "<span class='badge badge-danger right'>{$jml_pending_karya}</span>" : "";
+					$badge_pending_jurnal = ($jml_pending_jurnal > 0) ? "<span class='badge badge-danger right'>{$jml_pending_jurnal}</span>" : "";
 					?>
 					<li class='nav-item has-treeview'>
 						<a href='#' class='nav-link'>
@@ -117,7 +122,7 @@
 								</a></li>
 							<li class="nav-header">PUBLIKASI</li>
 							<li class='nav-item'><a href='/penelitian/jurnal' class='nav-link'><i class='nav-icon far fa-circle'></i>
-									<p>Jurnal</p>
+									<p>Jurnal <?php echo $badge_pending_jurnal; ?></p>
 								</a></li>
 							<li class='nav-item'><a href='/penelitian/prosiding' class='nav-link'><i class='nav-icon far fa-circle'></i>
 									<p>Prosiding</p>

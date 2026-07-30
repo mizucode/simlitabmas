@@ -1,6 +1,6 @@
-# Log Refactoring & Perbaikan Fitur Paten HKI
+# Log Refactoring & Perbaikan Fitur Penelitian
 
-Dokumen ini berisi rangkuman perubahan yang telah kita lakukan pada fitur **Paten HKI** untuk modul `simlitabmas` (Admin) dan `universe` (Dosen). Rangkuman ini dibuat untuk memudahkan proses dokumentasi sebelum melakukan *push* ke GitHub dan sebagai acuan untuk *refactoring* fitur penelitian lainnya (seperti Jurnal, Buku, dll) ke depannya.
+Dokumen ini berisi rangkuman perubahan yang telah kita lakukan pada fitur **Paten HKI**, **Karya Tanpa HKI**, dan **Artikel Jurnal** untuk modul `simlitabmas` (Admin/LPPM) dan `universe` (Dosen). Rangkuman ini dibuat untuk memudahkan proses dokumentasi sebelum melakukan *push* ke GitHub dan sebagai acuan untuk *refactoring* fitur penelitian lainnya (seperti Prosiding, Buku, dll) ke depannya.
 
 ## 1. Perbaikan Kueri Relasi Tabel (Jenis Paten & TKT)
 **Masalah:** Data "Jenis Paten" dan "Tingkat Kesiapan Teknologi (TKT)" tidak muncul pada halaman detail anggota paten HKI karena kesalahan pemanggilan parameter `kelompok` di kueri SQL.
@@ -35,9 +35,11 @@ Dokumen ini berisi rangkuman perubahan yang telah kita lakukan pada fitur **Pate
 ## 4. Refactoring Fitur Karya Tanpa HKI
 **Masalah & Perbaikan yang dilakukan:**
 - **Penambahan Kolom Database:** Menambahkan kolom `status` (ENUM) dan `keterangan_validasi` (TEXT) pada tabel `penelitian_karya` untuk mendukung proses validasi dari pihak LPPM (disetujui/ditolak/pending).
-- **Logika Insert Dosen:** 
+- **Logika Insert Dosen (Perbaikan Pivot):**
   - File: `universe/module/content/insert/dosen.php`
-  - *Refactor:* Mengubah logika `insert` karya agar mengecek duplikat judul. Jika sudah ada, dosen akan dimasukkan ke tabel *pivot* `regis_dosen_penelitian` sebagai anggota. Selain itu, menyesuaikan pemanggilan fungsi upload menjadi `UploadKarya()`.
+  - *Refactor:* Menghapus logika insert ke tabel *pivot* `regis_dosen_penelitian` saat dosen submit karya. Pivot insert **hanya terjadi saat LPPM memvalidasi** (status berubah ke `'2'`/Disetujui), bukan saat dosen submit.
+  - *Refactor:* Menyederhanakan logika insert menjadi: insert ke tabel utama `penelitian_karya` (status=`'1'`) + upload file. Tanpa cek duplikat judul.
+  - *Refactor:* Menyesuaikan pemanggilan fungsi upload menjadi `UploadKarya()`.
 - **Perbaikan UI & Select2 pada Form Input:**
   - File: `universe/module/content/penelitian/karya.php` dan `simlitabmas/module/content/penelitian/lppm/form/karya/edit.php`
   - *Refactor:* Mengubah `class` pada form *dropdown* tautan penelitian/pengabdian menjadi `select2-link` yang seragam dan bisa di-search.
@@ -47,9 +49,66 @@ Dokumen ini berisi rangkuman perubahan yang telah kita lakukan pada fitur **Pate
 
 ---
 
+## 5. Refactoring Fitur Artikel Jurnal
+
+### 5a. Penambahan Handler Delete yang Hilang (Simlitabmas)
+**Masalah:** Tombol "Hapus" pada halaman anggota jurnal dan tombol "Hapus" seluruh data jurnal menampilkan error karena handler delete-nya tidak ada di server-side. Route `/delete/penelitian/jurnal/<id>` dan `/delete/penelitian/anggota_jurnal/<id>` jatuh ke blok `else` default yang hanya redirect tanpa menghapus.
+**File yang diubah:**
+- `simlitabmas/module/content/delete/penelitian.php`
+  - *Refactor:* Menambahkan handler `jurnal` — menghapus file fisik (`file_jurnal`), file anggota, record anggota (`regis_dosen_penelitian` dengan `jenis_porto='jurnal'`), dan record utama `penelitian_jurnal` beserta duplikatnya. Redirect ke `/penelitian/jurnal/?m=deleted`.
+  - *Refactor:* Menambahkan handler `anggota_jurnal` — menghapus file lampiran anggota (`file_jurnal`), record anggota dari pivot, dan data duplikat. Redirect ke `/penelitian/jurnal/anggota/<id>?m=deleted`.
+
+### 5b. Perbaikan UI Halaman Jurnal Dosen (Universe)
+**Masalah:** Halaman jurnal dosen (`universe`) masih menggunakan 1 tabel gabungan untuk semua status (disetujui, pending, ditolak) tanpa DataTables, tidak konsisten dengan halaman penelitian yang sudah menggunakan 3 tabel terpisah.
+**File yang diubah:**
+- `universe/module/content/penelitian/jurnal.php`
+  - *Refactor:* Memecah 1 tabel gabungan menjadi **3 tabel terpisah**: Disetujui (`card-success`, status=`'2'`), Menunggu Validasi (`card-warning`, status=`'1'`/NULL), dan Ditolak (`card-danger`, status=`'3'`).
+  - *Refactor:* Menambahkan **DataTables** pada ketiga tabel dengan konfigurasi paging, search, dan scrollX.
+  - *Refactor:* Menambahkan **kolom "Keterangan Ditolak"** pada tabel ditolak.
+  - *Refactor:* Menambahkan dialog `confirm('Yakin hapus?')` pada tombol hapus di tabel Disetujui.
+  - *Refactor:* Menyeragamkan styling tabel (badge file, shadow, text-wrap) agar konsisten dengan `penelitian.php`.
+
+### 5c. Konsistensi Logika Pivot (Keputusan Desain)
+**Keputusan:** Insert ke tabel *pivot* `regis_dosen_penelitian` **hanya dilakukan saat LPPM memvalidasi** (status=`'2'`), bukan saat dosen submit dari Universe.
+**Dampak:**
+- Insert dari Universe (`universe/module/content/insert/dosen.php`) untuk **semua fitur** (penelitian, patenhki, jurnal, karya) **tidak** memasukkan data ke tabel pivot.
+- Validasi dari Simlitabmas (`simlitabmas/module/content/penelitian/lppm/validasi/*.php`) yang menangani pivot insert saat status berubah ke `'2'` dengan cek duplikasi.
+
+| Handler Validasi | File | Pivot saat approve? | Cek duplikat? |
+|---|---|---|---|
+| Penelitian | `validasi/penelitian.php` | ✅ | ✅ |
+| Paten HKI | `validasi/patenhki.php` | ✅ | ✅ |
+| Jurnal | `validasi/jurnal.php` | ✅ | ✅ |
+| Karya | `validasi/karya.php` | ✅ | ✅ |
+
+### 5d. Sinkronisasi API Upload Jurnal
+- `universe/config/upload.php`
+  - *Refactor:* Mengupdate API Key pada function `UploadJurnal()` dari *placeholder* menjadi key yang valid.
+
+### 5e. Perbaikan Bug Insert Jurnal (Kueri SQL & File Upload)
+**Masalah & Perbaikan yang dilakukan:**
+- **Kueri SQL Implisit:** Sebelumnya, insert ke tabel `penelitian_jurnal` tidak menuliskan nama kolom secara eksplisit (`INSERT INTO penelitian_jurnal() VALUES(...)`). Akibatnya, saat kita menambahkan kolom baru di tabel (`status`, `keterangan_validasi`), semua data yang diinput bergeser masuk ke kolom yang salah.
+  - File: `universe/module/content/insert/dosen.php`
+  - *Refactor:* Mengubah format query insert menjadi eksplisit dan menyebutkan seluruh nama kolom yang dituju secara berurutan. (Paten HKI juga sudah disesuaikan sebelumnya, sedangkan Karya dan Penelitian sudah aman dari awal).
+- **Gagal Upload File (File Input Name):** Dosen gagal mengunggah lampiran jurnal karena *handler* di sisi server mencari `$_FILES['file1']`, sedangkan pada form input di Universe namanya adalah `name="file"`.
+  - File: `universe/module/content/insert/dosen.php`
+  - *Refactor:* Mengubah `$_FILES['file1']` menjadi `$_FILES['file']` pada bagian insert jurnal.
+
+### 5f. Perbaikan UI (Tabel Jurnal LPPM)
+**Masalah:** Pada halaman data jurnal di sisi Admin/LPPM, judul artikel yang panjang membuat tabel terlihat berantakan atau kolomnya menyusut tidak proporsional saat diakses pada layar yang lebih kecil.
+- `simlitabmas/module/content/penelitian/lppm/jurnal.php`
+  - *Refactor:* Menerapkan *CSS line-clamping* (`-webkit-line-clamp: 2`) pada kolom Judul Artikel agar maksimal hanya mengambil 2 baris teks (diakhiri dengan elipsis `...`).
+  - *Refactor:* Menambahkan atribut `title` agar judul lengkap tetap terlihat saat kursor disorot (*hover*).
+  - *Refactor:* Menambahkan *style* `min-width: 250px;` pada sel (td) agar kolom memiliki lebar proporsional dan teks tidak terhimpit.
+
+---
+
 ### Langkah Berikutnya (*Next Steps*)
-Jika nanti kita akan melakukan *refactoring* pada fitur penelitian lain seperti **Jurnal** atau **Prosiding**, kita dapat mengacu pada pola perbaikan yang sama:
-1. Pastikan *prefix parameter kelompok* untuk relasi ke tabel `kode` sudah benar.
-2. Buat fungsi `Upload...()` tersendiri di `config/upload.php` (baik di sisi admin maupun dosen) beserta penyesuaian *API Key* jika diperlukan.
-3. Sesuaikan alur `insert` dan `update` agar menggunakan path direktori spesifik (misal: `file/jurnal/`).
-4. Update kueri indikator *pending* di `sidebar.php` jika diperlukan.
+Fitur yang belum di-*refactor* dengan pola yang sama:
+1. **Prosiding** — Belum ada 3 tabel terpisah di Universe, belum dicek handler delete.
+2. **Buku** — Perlu penyesuaian yang sama.
+3. **Tulisan Media Massa** — Perlu penyesuaian yang sama.
+4. Pastikan semua *prefix parameter kelompok* untuk relasi ke tabel `kode` sudah benar.
+5. Buat fungsi `Upload...()` tersendiri di `config/upload.php` (baik di sisi admin maupun dosen) beserta penyesuaian *API Key* jika diperlukan.
+6. Sesuaikan alur `insert` dan `update` agar menggunakan path direktori spesifik.
+7. Update kueri indikator *pending* di `sidebar.php` jika diperlukan.

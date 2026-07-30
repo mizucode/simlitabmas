@@ -129,8 +129,79 @@ if (empty($_SESSION['ses_user']) AND empty($_SESSION['ses_pass']) AND empty($_SE
 			header("location:/penelitian/penelitian/anggota/$id_porto?m=not_updated");
 		}
 	} elseif (@$folder[3] == 'patenhki') {
-		// Logika update untuk patenhki jika diperlukan
-		header('location:/penelitian/penelitian/?m=updated');
+		$id = mysqli_real_escape_string($con, $_POST['id']);
+		$judul = mysqli_real_escape_string($con, $_POST['judul']);
+		$id_jenis = mysqli_real_escape_string($con, $_POST['id_jenis']);
+		$tgl_paten = mysqli_real_escape_string($con, $_POST['tgl_paten']);
+		$nomor = mysqli_real_escape_string($con, $_POST['nomor']);
+		$pemberi = mysqli_real_escape_string($con, @$_POST['pemberi']);
+		$id_tkt = mysqli_real_escape_string($con, $_POST['id_tkt']);
+		$link_lit = mysqli_real_escape_string($con, @$_POST['link_lit']);
+		$link_abmas = mysqli_real_escape_string($con, @$_POST['link_abmas']);
+		$redirect = isset($_POST['redirect']) ? $_POST['redirect'] : '/penelitian/patenhki';
+
+		$query = "UPDATE penelitian_patenhki SET 
+			judul='$judul',
+			id_jenis='$id_jenis',
+			tgl_paten='$tgl_paten',
+			nomor='$nomor',
+			pemberi='$pemberi',
+			id_tkt='$id_tkt',
+			link_lit='$link_lit',
+			link_abmas='$link_abmas',
+			date_modif=CURDATE(),
+			time_modif=CURTIME()
+			WHERE id='$id'";
+
+		if (mysqli_query($con, $query)) {
+			header("location:" . $redirect . "?m=updated");
+		} else {
+			header("location:" . $redirect . "?m=not_updated");
+		}
+	} elseif (@$folder[3] == 'jurnal') {
+		$id = mysqli_real_escape_string($con, $_POST['id']);
+		$judul = mysqli_real_escape_string($con, $_POST['judul']);
+		$id_jenis = mysqli_real_escape_string($con, $_POST['id_jenis']);
+		$nama_jurnal = mysqli_real_escape_string($con, $_POST['nama_jurnal']);
+		$issn = mysqli_real_escape_string($con, $_POST['issn']);
+		$url_jurnal = mysqli_real_escape_string($con, @$_POST['url_jurnal']);
+		$tgl_terbit = mysqli_real_escape_string($con, $_POST['tgl_terbit']);
+		$vol = mysqli_real_escape_string($con, $_POST['vol']);
+		$no = mysqli_real_escape_string($con, $_POST['no']);
+		$halaman = mysqli_real_escape_string($con, @$_POST['halaman']);
+		$penerbit = mysqli_real_escape_string($con, $_POST['penerbit']);
+		$doi = mysqli_real_escape_string($con, @$_POST['doi']);
+		$sitasi = mysqli_real_escape_string($con, $_POST['sitasi']);
+		$url_artikel = mysqli_real_escape_string($con, $_POST['url_artikel']);
+		$link_lit = mysqli_real_escape_string($con, @$_POST['link_lit']);
+		$link_abmas = mysqli_real_escape_string($con, @$_POST['link_abmas']);
+		$redirect = isset($_POST['redirect']) ? $_POST['redirect'] : '/penelitian/jurnal';
+
+		$query = "UPDATE penelitian_jurnal SET 
+			judul='$judul',
+			id_jenis='$id_jenis',
+			nama_jurnal='$nama_jurnal',
+			issn='$issn',
+			url_jurnal='$url_jurnal',
+			tgl_terbit='$tgl_terbit',
+			vol='$vol',
+			no='$no',
+			halaman='$halaman',
+			penerbit='$penerbit',
+			doi='$doi',
+			sitasi='$sitasi',
+			url_artikel='$url_artikel',
+			link_lit='$link_lit',
+			link_abmas='$link_abmas',
+			date_modif=CURDATE(),
+			time_modif=CURTIME()
+			WHERE id='$id'";
+
+		if (mysqli_query($con, $query)) {
+			header("location:" . $redirect . "?m=updated");
+		} else {
+			header("location:" . $redirect . "?m=not_updated");
+		}
 	} elseif (@$folder[3] == 'karya') {
 		$id = mysqli_real_escape_string($con, $_POST['id']);
 		$judul = mysqli_real_escape_string($con, $_POST['judul']);
