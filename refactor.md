@@ -103,12 +103,48 @@ Dokumen ini berisi rangkuman perubahan yang telah kita lakukan pada fitur **Pate
 
 ---
 
+## 6. Refactoring Fitur Artikel Prosiding
+
+### 6a. Penambahan Handler Delete (Simlitabmas)
+**Masalah:** Proses hapus data utama prosiding dan anggota prosiding belum ter-handle di server.
+**File yang diubah:**
+- `simlitabmas/module/content/delete/penelitian.php`
+  - *Refactor:* Menambahkan handler `prosiding` untuk menghapus file fisik (`file_prosiding`), file anggota, record anggota (`regis_dosen_penelitian` dengan `jenis_porto='prosiding'`), dan record utama `penelitian_prosiding` beserta duplikatnya. Redirect ke `/penelitian/prosiding/?m=deleted`.
+  - *Refactor:* Menambahkan handler `anggota_prosiding` dengan logika penghapusan serupa untuk tingkat keanggotaan.
+
+### 6b. Perbaikan UI Halaman Prosiding Dosen (Universe)
+**Masalah:** Halaman prosiding dosen (`universe`) masih menggunakan 1 tabel gabungan untuk semua status, sama seperti kasus artikel jurnal sebelumnya.
+**File yang diubah:**
+- `universe/module/content/penelitian/prosiding.php`
+  - *Refactor:* Memecah 1 tabel gabungan menjadi **3 tabel terpisah**: Disetujui (`card-success`), Menunggu Validasi (`card-warning`), dan Ditolak (`card-danger`).
+  - *Refactor:* Menerapkan **DataTables** pada ketiga tabel dengan konfigurasi seragam dan responsif.
+  - *Refactor:* Menambahkan **kolom "Keterangan Ditolak"** pada tabel ditolak.
+  - *Refactor:* Menambahkan dialog `confirm('Yakin hapus?')` pada tombol hapus.
+
+### 6c. Perbaikan Bug Insert Prosiding & Sinkronisasi Upload
+**Masalah:** Query insert masih implisit dan belum ada direktori upload yang spesifik.
+**File yang diubah:**
+- `universe/module/content/insert/dosen.php`
+  - *Refactor:* Mengubah format query insert ke `penelitian_prosiding` menjadi eksplisit dengan menyebutkan nama kolom secara berurutan.
+  - *Refactor:* Memperbarui path upload menjadi `file/prosiding/` dan prefix file menjadi `prosiding_...`.
+  - *Refactor:* Menggunakan pemanggilan fungsi `UploadProsiding()` untuk memisahkan file dari file penelitian biasa.
+
+### 6d. Perbaikan UI (Tabel Prosiding LPPM) & Notifikasi Sidebar
+**Masalah:** Tabel di sisi Admin butuh line-clamping agar rapi, dan notifikasi pending belum mencakup prosiding.
+**File yang diubah:**
+- `simlitabmas/module/content/penelitian/lppm/prosiding.php`
+  - *Refactor:* Menerapkan *CSS line-clamping* pada kolom Judul Naskah dan Nama Seminar, serta memberikan atribut `title`.
+- `simlitabmas/module/view/sidebar.php`
+  - *Refactor:* Menambahkan query count untuk status pending pada tabel `penelitian_prosiding` dan menampilkannya sebagai *badge* pada sidebar Admin/LPPM.
+  - *Refactor:* Menambahkan jumlah *pending* prosiding ke dalam akumulasi badge utama **Penelitian**.
+
+---
+
 ### Langkah Berikutnya (*Next Steps*)
 Fitur yang belum di-*refactor* dengan pola yang sama:
-1. **Prosiding** — Belum ada 3 tabel terpisah di Universe, belum dicek handler delete.
-2. **Buku** — Perlu penyesuaian yang sama.
-3. **Tulisan Media Massa** — Perlu penyesuaian yang sama.
-4. Pastikan semua *prefix parameter kelompok* untuk relasi ke tabel `kode` sudah benar.
-5. Buat fungsi `Upload...()` tersendiri di `config/upload.php` (baik di sisi admin maupun dosen) beserta penyesuaian *API Key* jika diperlukan.
-6. Sesuaikan alur `insert` dan `update` agar menggunakan path direktori spesifik.
-7. Update kueri indikator *pending* di `sidebar.php` jika diperlukan.
+1. **Buku** — Belum ada 3 tabel terpisah di Universe, perlu handler delete, kueri eksplisit, dan line-clamping.
+2. **Tulisan Media Massa** — Perlu penyesuaian yang sama.
+3. Pastikan semua *prefix parameter kelompok* untuk relasi ke tabel `kode` sudah benar.
+4. Buat fungsi `Upload...()` tersendiri di `config/upload.php` (baik di sisi admin maupun dosen) beserta penyesuaian *API Key* jika diperlukan.
+5. Sesuaikan alur `insert` dan `update` agar menggunakan path direktori spesifik.
+6. Update kueri indikator *pending* di `sidebar.php` jika diperlukan.
