@@ -140,11 +140,71 @@ Dokumen ini berisi rangkuman perubahan yang telah kita lakukan pada fitur **Pate
 
 ---
 
+## 7. Refactoring Fitur Buku Referensi
+
+### 7a. Penambahan Handler Delete (Simlitabmas)
+**Masalah:** Proses hapus data buku referensi belum ter-handle di server.
+**File yang diubah:**
+- `simlitabmas/module/content/delete/penelitian.php`
+  - *Refactor:* Menambahkan handler `buku` untuk menghapus file fisik (`file_buku`), file anggota, dan record utama `penelitian_buku` beserta duplikatnya. Redirect ke `/penelitian/buku/?m=deleted`.
+
+### 7b. Perbaikan UI Halaman Buku Dosen (Universe)
+**Masalah:** Halaman buku dosen (`universe`) masih menggunakan 1 tabel gabungan untuk semua status, sama seperti kasus fitur sebelumnya.
+**File yang diubah:**
+- `universe/module/content/penelitian/buku.php`
+  - *Refactor:* Memecah 1 tabel gabungan menjadi **3 tabel terpisah**: Disetujui (`card-success`), Menunggu Validasi (`card-warning`), dan Ditolak (`card-danger`).
+  - *Refactor:* Menerapkan **DataTables** pada ketiga tabel dengan konfigurasi seragam dan responsif.
+  - *Refactor:* Menambahkan **kolom "Keterangan Ditolak"** pada tabel ditolak.
+  - *Refactor:* Menambahkan dialog `confirm('Yakin hapus?')` pada tombol hapus.
+
+### 7c. Perbaikan Bug Insert Buku & Sinkronisasi Upload
+**Masalah:** Query insert masih implisit dan belum ada direktori upload yang spesifik.
+**File yang diubah:**
+- `universe/module/content/insert/dosen.php`
+  - *Refactor:* Mengubah format query insert ke `penelitian_buku` menjadi eksplisit dengan menyebutkan nama kolom secara berurutan. Kolom `status` otomatis diisi `1` (pending) dan `keterangan_validasi` dikosongkan.
+  - *Refactor:* Memperbarui path upload menjadi `file/buku/` dan prefix file menjadi `buku_...`.
+  - *Refactor:* Menggunakan pemanggilan fungsi `UploadBuku()` untuk memisahkan file.
+
+### 7d. Perbaikan UI (Tabel Buku LPPM), Handler Validasi, & Notifikasi Sidebar
+**Masalah:** Tabel di sisi Admin butuh line-clamping agar rapi, tabel validasi belum dipisahkan dari tabel utama, dan notifikasi pending belum mencakup buku.
+**File yang diubah:**
+- `simlitabmas/module/content/penelitian/lppm/buku.php`
+  - *Refactor:* Menerapkan *CSS line-clamping* pada kolom Judul Buku dan Penerbit, serta memberikan atribut `title`.
+  - *Refactor:* Mengubah halaman ini agar hanya menampilkan Buku yang berstatus **Disetujui**.
+  - *Refactor:* Menambahkan tombol peringatan yang mengarah ke form Validasi.
+- `simlitabmas/module/content/penelitian/lppm/validasi/buku.php`
+  - *Refactor:* Membuat halaman baru untuk memisahkan tabel **Buku Menunggu Validasi** dan **Buku Ditolak**.
+  - *Refactor:* Menambahkan modal berbasis AJAX untuk memproses validasi dosen dengan mengubah status menjadi '2' (Setuju) atau '3' (Tolak). Mengingat Buku tidak menggunakan data anggota, insert ke tabel *pivot* diabaikan.
+- `simlitabmas/module/view/sidebar.php`
+  - *Refactor:* Menambahkan query count untuk status pending pada tabel `penelitian_buku` dan menampilkannya sebagai *badge* pada sidebar Admin/LPPM.
+  - *Refactor:* Menambahkan jumlah *pending* buku ke dalam akumulasi badge utama **Penelitian**.
+
+---
+
+## 8. Refactoring Logika Duplikasi Data Anggota Portfolio
+**Masalah:** Saat admin LPPM menambahkan anggota baru ke dalam suatu portofolio (Penelitian, Paten HKI, Jurnal, Karya, Prosiding, Buku), sistem secara logika memang perlu menduplikasi record utama portofolio tersebut untuk kepemilikan anggota. Namun, sistem lama menggunakan *hardcoded SQL query* untuk menduplikasi data, yang rentan *error* atau tertinggal ketika ada penambahan kolom baru (misal: penambahan kolom `status`). Selain itu, lampiran *file* yang diunggah saat menambahkan anggota justru dihubungkan ke `id_porto` milik ketua, bukan ke `id` duplikat milik anggota tersebut. Hal ini membuat manajemen file berantakan dan berpotensi memicu masalah saat fitur hapus dijalankan.
+**File yang diubah:**
+- `simlitabmas/module/content/insert/penelitian.php`
+  - *Refactor:* Membuat fungsi *helper* `duplicatePortfolioRecord($con, $jenis_porto, $id_porto, $nik, $role)` untuk menangani duplikasi secara dinamis. Fungsi ini membaca isi seluruh kolom dari record asal, mengganti pemilik (`nip_dosen`) menjadi `$nik` anggota baru, dan men-generate *query INSERT* secara dinamis untuk seluruh modul (Penelitian, Paten, Jurnal, Karya, Prosiding, Buku).
+  - *Refactor:* Menambahkan perlindungan duplikasi (pengecekan judul dan NIP) di dalam fungsi *helper* sebelum melakukan duplikasi.
+  - *Refactor:* Memperbaiki alur unggah file pada rute *handler* `anggota_*` (semua jenis portofolio). Kini query ke `file_dosen` menggunakan ID duplikat yang baru saja digenerate (`$new_id_cat`) sehingga file anggota terkait langsung dengan record miliknya sendiri, bukan menumpang pada ID ketua.
+
+---
+
+## 9. Aturan Baru: Penghapusan Total Kueri Pivot di Sisi Dosen (Universe)
+**Masalah & Keputusan Desain:** Sebelumnya, logika input data (misalnya Jurnal, Karya, dll) dari sisi dosen (`universe/module/content/insert/dosen.php`) ikut melakukan *insert* ke tabel *pivot* (`regis_dosen_penelitian`). Hal ini tidak sesuai secara alur, karena data yang baru di-submit belum divalidasi oleh pihak LPPM, namun sudah masuk ke tabel registrasi dosen.
+**File yang diubah:**
+- `universe/module/content/insert/dosen.php`
+  - *Refactor (Rule Universe):* Kueri untuk tabel `regis_dosen_penelitian` telah **dihapus sepenuhnya** dari seluruh blok portofolio penelitian (Penelitian, Paten HKI, Jurnal, Karya, Prosiding, Buku, Chapter, Tulisan, Non-Publikasi, Monograf, Penerjemahan, Penyuntingan). 
+  - *Alur Baru:* Saat dosen *submit* data, sistem **hanya** memasukkan data ke tabel utamanya masing-masing (misal: `penelitian_jurnal`) dengan `status = '1'` (Pending) dan mengunggah lampiran ke tabel `file_dosen`. 
+  - *Aturan File (file_dosen):* Lampiran yang diunggah akan ditautkan ke tabel `file_dosen` menggunakan `id_cat` yang diambil dari ID record tabel utama yang baru saja di-*insert* (didapat melalui query `max(id)`). Nilai `kelompok` harus disesuaikan secara eksplisit dengan jenis portofolio (misal: `file_penelitian`, `file_patenhki`, `file_jurnal`, `file_karya`, dst).
+  - Tabel *pivot* `regis_dosen_penelitian` hanya akan diisi secara aman oleh modul LPPM di Simlitabmas ketika data tersebut **disetujui (divalidasi)**.
+
+---
 ### Langkah Berikutnya (*Next Steps*)
 Fitur yang belum di-*refactor* dengan pola yang sama:
-1. **Buku** — Belum ada 3 tabel terpisah di Universe, perlu handler delete, kueri eksplisit, dan line-clamping.
-2. **Tulisan Media Massa** — Perlu penyesuaian yang sama.
-3. Pastikan semua *prefix parameter kelompok* untuk relasi ke tabel `kode` sudah benar.
-4. Buat fungsi `Upload...()` tersendiri di `config/upload.php` (baik di sisi admin maupun dosen) beserta penyesuaian *API Key* jika diperlukan.
-5. Sesuaikan alur `insert` dan `update` agar menggunakan path direktori spesifik.
-6. Update kueri indikator *pending* di `sidebar.php` jika diperlukan.
+1. **Tulisan Media Massa** — Perlu penyesuaian yang sama (handler delete, kueri eksplisit, pemisahan tabel, form, dan logika `duplicatePortfolioRecord`).
+2. Pastikan semua *prefix parameter kelompok* untuk relasi ke tabel `kode` sudah benar.
+3. Buat fungsi `Upload...()` tersendiri di `config/upload.php` (baik di sisi admin maupun dosen) beserta penyesuaian *API Key* jika diperlukan.
+4. Sesuaikan alur `insert` dan `update` agar menggunakan path direktori spesifik.
+5. Update kueri indikator *pending* di `sidebar.php` jika diperlukan.

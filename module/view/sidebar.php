@@ -96,18 +96,23 @@
 					$d_pending_jurnal = mysqli_fetch_assoc($q_pending_jurnal);
 					$jml_pending_jurnal = $d_pending_jurnal['jml'];
 
-					$q_pending_prosiding = mysqli_query($con, "SELECT COUNT(id) AS jml FROM penelitian_prosiding WHERE status='1' OR status IS NULL OR status=''");
+										$q_pending_prosiding = mysqli_query($con, "SELECT COUNT(id) AS jml FROM penelitian_prosiding WHERE status='1' OR status IS NULL OR status=''");
 					$d_pending_prosiding = mysqli_fetch_assoc($q_pending_prosiding);
 					$jml_pending_prosiding = $d_pending_prosiding['jml'];
 
-					$total_pending = $jml_pending + $jml_pending_paten + $jml_pending_karya + $jml_pending_jurnal + $jml_pending_prosiding;
+					$q_pending_buku = mysqli_query($con, "SELECT COUNT(id) AS jml FROM penelitian_buku WHERE status='1' OR status IS NULL OR status=''");
+					$d_pending_buku = mysqli_fetch_assoc($q_pending_buku);
+					$jml_pending_buku = $d_pending_buku['jml'];
+
+					$total_pending = $jml_pending + $jml_pending_paten + $jml_pending_karya + $jml_pending_jurnal + $jml_pending_prosiding + $jml_pending_buku;
 					
 					$badge_total_pending = ($total_pending > 0) ? "<span class='badge badge-danger right' style='margin-right: 20px;'>{$total_pending}</span>" : "";
 					$badge_pending_child = ($jml_pending > 0) ? "<span class='badge badge-danger right'>{$jml_pending}</span>" : "";
 					$badge_pending_paten = ($jml_pending_paten > 0) ? "<span class='badge badge-danger right'>{$jml_pending_paten}</span>" : "";
 					$badge_pending_karya = ($jml_pending_karya > 0) ? "<span class='badge badge-danger right'>{$jml_pending_karya}</span>" : "";
 					$badge_pending_jurnal = ($jml_pending_jurnal > 0) ? "<span class='badge badge-danger right'>{$jml_pending_jurnal}</span>" : "";
-					$badge_pending_prosiding = ($jml_pending_prosiding > 0) ? "<span class='badge badge-danger right'>{$jml_pending_prosiding}</span>" : "";
+										$badge_pending_prosiding = ($jml_pending_prosiding > 0) ? "<span class='badge badge-danger right'>{$jml_pending_prosiding}</span>" : "";
+					$badge_pending_buku = ($jml_pending_buku > 0) ? "<span class='badge badge-danger right'>{$jml_pending_buku}</span>" : "";
 					?>
 					<li class='nav-item has-treeview'>
 						<a href='#' class='nav-link'>
@@ -132,8 +137,8 @@
 							<li class='nav-item'><a href='/penelitian/prosiding' class='nav-link'><i class='nav-icon far fa-circle'></i>
 									<p>Prosiding <?php echo $badge_pending_prosiding; ?></p>
 								</a></li>
-							<li class='nav-item'><a href='/penelitian/buku' class='nav-link'><i class='nav-icon far fa-circle'></i>
-									<p>Buku Referensi</p>
+														<li class='nav-item'><a href='/penelitian/buku' class='nav-link'><i class='nav-icon far fa-circle'></i>
+									<p>Buku Referensi <?php echo $badge_pending_buku; ?></p>
 								</a></li>
 							<li class='nav-item'><a href='/penelitian/chapter' class='nav-link'><i class='nav-icon far fa-circle'></i>
 									<p>Book Chapter</p>

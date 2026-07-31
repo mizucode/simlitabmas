@@ -62,13 +62,11 @@ if (empty($_SESSION['ses_user']) AND empty($_SESSION['ses_pass']) AND empty($_SE
 			}
 			
 			// Hapus file terkait anggota ini (berdasarkan id_porto dan nik)
-			$qfile = mysqli_query($con, "SELECT url FROM file_dosen WHERE id_cat='$id_porto' AND nip_dosen='$nik' AND kelompok='file_penelitian'");
+			$qfile = mysqli_query($con, "SELECT url FROM file_dosen WHERE (id_cat='$id_porto' OR id_cat IN (SELECT id FROM penelitian_penelitian WHERE judul_kegiatan='$judul_kegiatan')) AND nip_dosen='$nik' AND kelompok='file_penelitian'");
 			while ($rf = mysqli_fetch_array($qfile)) {
-				if (file_exists($rf['url'])) {
-					@unlink($rf['url']);
-				}
+				if (file_exists($rf['url'])) @unlink($rf['url']);
 			}
-			mysqli_query($con, "DELETE FROM file_dosen WHERE id_cat='$id_porto' AND nip_dosen='$nik' AND kelompok='file_penelitian'");
+			mysqli_query($con, "DELETE FROM file_dosen WHERE (id_cat='$id_porto' OR id_cat IN (SELECT id FROM penelitian_penelitian WHERE judul_kegiatan='$judul_kegiatan')) AND nip_dosen='$nik' AND kelompok='file_penelitian'");
 			
 			if (mysqli_query($con, "DELETE FROM regis_dosen_penelitian WHERE id='$id_regis'")) {
 				// Hapus data duplikat di tabel penelitian_penelitian
@@ -135,11 +133,11 @@ if (empty($_SESSION['ses_user']) AND empty($_SESSION['ses_pass']) AND empty($_SE
 				$judul_kegiatan = mysqli_real_escape_string($con, $orig['judul']);
 			}
 			
-			$qfile = mysqli_query($con, "SELECT url FROM file_dosen WHERE id_cat='$id_porto' AND nip_dosen='$nik' AND kelompok='file_prosiding'");
+			$qfile = mysqli_query($con, "SELECT url FROM file_dosen WHERE (id_cat='$id_porto' OR id_cat IN (SELECT id FROM penelitian_prosiding WHERE judul='$judul_kegiatan')) AND nip_dosen='$nik' AND kelompok='file_prosiding'");
 			while ($rf = mysqli_fetch_array($qfile)) {
 				if (file_exists($rf['url'])) @unlink($rf['url']);
 			}
-			mysqli_query($con, "DELETE FROM file_dosen WHERE id_cat='$id_porto' AND nip_dosen='$nik' AND kelompok='file_prosiding'");
+			mysqli_query($con, "DELETE FROM file_dosen WHERE (id_cat='$id_porto' OR id_cat IN (SELECT id FROM penelitian_prosiding WHERE judul='$judul_kegiatan')) AND nip_dosen='$nik' AND kelompok='file_prosiding'");
 			
 			if (mysqli_query($con, "DELETE FROM regis_dosen_penelitian WHERE id='$id_regis'")) {
 				if (!empty($judul_kegiatan)) {
@@ -240,11 +238,11 @@ if (empty($_SESSION['ses_user']) AND empty($_SESSION['ses_pass']) AND empty($_SE
 				$judul_kegiatan = mysqli_real_escape_string($con, $orig['judul']);
 			}
 			
-			$qfile = mysqli_query($con, "SELECT url FROM file_dosen WHERE id_cat='$id_porto' AND nip_dosen='$nik' AND kelompok='file_patenhki'");
+			$qfile = mysqli_query($con, "SELECT url FROM file_dosen WHERE (id_cat='$id_porto' OR id_cat IN (SELECT id FROM penelitian_patenhki WHERE judul='$judul_kegiatan')) AND nip_dosen='$nik' AND kelompok='file_patenhki'");
 			while ($rf = mysqli_fetch_array($qfile)) {
 				if (file_exists($rf['url'])) @unlink($rf['url']);
 			}
-			mysqli_query($con, "DELETE FROM file_dosen WHERE id_cat='$id_porto' AND nip_dosen='$nik' AND kelompok='file_patenhki'");
+			mysqli_query($con, "DELETE FROM file_dosen WHERE (id_cat='$id_porto' OR id_cat IN (SELECT id FROM penelitian_patenhki WHERE judul='$judul_kegiatan')) AND nip_dosen='$nik' AND kelompok='file_patenhki'");
 			
 			if (mysqli_query($con, "DELETE FROM regis_dosen_penelitian WHERE id='$id_regis'")) {
 				if (!empty($judul_kegiatan)) {
@@ -272,13 +270,11 @@ if (empty($_SESSION['ses_user']) AND empty($_SESSION['ses_pass']) AND empty($_SE
 				$judul_kegiatan = mysqli_real_escape_string($con, $orig['judul']);
 			}
 			
-			$qfile = mysqli_query($con, "SELECT url FROM file_dosen WHERE id_cat='$id_porto' AND nip_dosen='$nik' AND kelompok='file_jurnal'");
+			$qfile = mysqli_query($con, "SELECT url FROM file_dosen WHERE (id_cat='$id_porto' OR id_cat IN (SELECT id FROM penelitian_jurnal WHERE judul='$judul_kegiatan')) AND nip_dosen='$nik' AND kelompok='file_jurnal'");
 			while ($rf = mysqli_fetch_array($qfile)) {
-				if (file_exists($rf['url'])) {
-					@unlink($rf['url']);
-				}
+				if (file_exists($rf['url'])) @unlink($rf['url']);
 			}
-			mysqli_query($con, "DELETE FROM file_dosen WHERE id_cat='$id_porto' AND nip_dosen='$nik' AND kelompok='file_jurnal'");
+			mysqli_query($con, "DELETE FROM file_dosen WHERE (id_cat='$id_porto' OR id_cat IN (SELECT id FROM penelitian_jurnal WHERE judul='$judul_kegiatan')) AND nip_dosen='$nik' AND kelompok='file_jurnal'");
 			
 			if (mysqli_query($con, "DELETE FROM regis_dosen_penelitian WHERE id='$id_regis'")) {
 				if (!empty($judul_kegiatan)) {
@@ -340,11 +336,11 @@ if (empty($_SESSION['ses_user']) AND empty($_SESSION['ses_pass']) AND empty($_SE
 				$judul_kegiatan = mysqli_real_escape_string($con, $orig['judul']);
 			}
 			
-			$qfile = mysqli_query($con, "SELECT url FROM file_dosen WHERE id_cat='$id_porto' AND nip_dosen='$nik' AND kelompok='file_karya'");
+			$qfile = mysqli_query($con, "SELECT url FROM file_dosen WHERE (id_cat='$id_porto' OR id_cat IN (SELECT id FROM penelitian_karya WHERE judul='$judul_kegiatan')) AND nip_dosen='$nik' AND kelompok='file_karya'");
 			while ($rf = mysqli_fetch_array($qfile)) {
 				if (file_exists($rf['url'])) @unlink($rf['url']);
 			}
-			mysqli_query($con, "DELETE FROM file_dosen WHERE id_cat='$id_porto' AND nip_dosen='$nik' AND kelompok='file_karya'");
+			mysqli_query($con, "DELETE FROM file_dosen WHERE (id_cat='$id_porto' OR id_cat IN (SELECT id FROM penelitian_karya WHERE judul='$judul_kegiatan')) AND nip_dosen='$nik' AND kelompok='file_karya'");
 			
 			if (mysqli_query($con, "DELETE FROM regis_dosen_penelitian WHERE id='$id_regis'")) {
 				if (!empty($judul_kegiatan)) {
@@ -406,11 +402,11 @@ if (empty($_SESSION['ses_user']) AND empty($_SESSION['ses_pass']) AND empty($_SE
 				$judul_kegiatan = mysqli_real_escape_string($con, $orig['judul']);
 			}
 			
-			$qfile = mysqli_query($con, "SELECT url FROM file_dosen WHERE id_cat='$id_porto' AND nip_dosen='$nik' AND kelompok='file_prosiding'");
+			$qfile = mysqli_query($con, "SELECT url FROM file_dosen WHERE (id_cat='$id_porto' OR id_cat IN (SELECT id FROM penelitian_prosiding WHERE judul='$judul_kegiatan')) AND nip_dosen='$nik' AND kelompok='file_prosiding'");
 			while ($rf = mysqli_fetch_array($qfile)) {
 				if (file_exists($rf['url'])) @unlink($rf['url']);
 			}
-			mysqli_query($con, "DELETE FROM file_dosen WHERE id_cat='$id_porto' AND nip_dosen='$nik' AND kelompok='file_prosiding'");
+			mysqli_query($con, "DELETE FROM file_dosen WHERE (id_cat='$id_porto' OR id_cat IN (SELECT id FROM penelitian_prosiding WHERE judul='$judul_kegiatan')) AND nip_dosen='$nik' AND kelompok='file_prosiding'");
 			
 			if (mysqli_query($con, "DELETE FROM regis_dosen_penelitian WHERE id='$id_regis'")) {
 				if (!empty($judul_kegiatan)) {
@@ -422,6 +418,61 @@ if (empty($_SESSION['ses_user']) AND empty($_SESSION['ses_pass']) AND empty($_SE
 			}
 		} else {
 			header("location:/penelitian/prosiding");
+		}
+	} elseif (@$folder[3] == 'buku') {
+		$id = mysqli_real_escape_string($con, @$folder[4]);
+		
+		$judul_kegiatan = '';
+		$q_orig = mysqli_query($con, "SELECT judul FROM penelitian_buku WHERE id = '$id'");
+		if ($orig = mysqli_fetch_array($q_orig)) {
+			$judul_kegiatan = mysqli_real_escape_string($con, $orig['judul']);
+		}
+		
+		$qfile = mysqli_query($con, "SELECT url FROM file_dosen WHERE id_cat='$id' AND kelompok='file_buku'");
+		while ($rf = mysqli_fetch_array($qfile)) {
+			if (file_exists($rf['url'])) @unlink($rf['url']);
+		}
+		mysqli_query($con, "DELETE FROM file_dosen WHERE id_cat='$id' AND kelompok='file_buku'");
+
+		if (mysqli_query($con, "DELETE FROM penelitian_buku WHERE id='$id'")) {
+			if (!empty($judul_kegiatan)) {
+				mysqli_query($con, "DELETE FROM penelitian_buku WHERE judul='$judul_kegiatan'");
+			}
+			header('location:/penelitian/buku/?m=deleted');
+		} else {
+			header('location:/penelitian/buku/?m=not_deleted');
+		}
+	} elseif (@$folder[3] == 'anggota_buku') {
+		$id_raw = explode('?', @$folder[4])[0];
+		$id_regis = mysqli_real_escape_string($con, $id_raw);
+		
+		$q = mysqli_query($con, "SELECT id_porto, nik FROM regis_dosen_penelitian WHERE id='$id_regis'");
+		if ($row = mysqli_fetch_array($q)) {
+			$id_porto = $row['id_porto'];
+			$nik = $row['nik'];
+			
+			$judul_kegiatan = '';
+			$q_orig = mysqli_query($con, "SELECT judul FROM penelitian_buku WHERE id = '$id_porto'");
+			if ($orig = mysqli_fetch_array($q_orig)) {
+				$judul_kegiatan = mysqli_real_escape_string($con, $orig['judul']);
+			}
+			
+			$qfile = mysqli_query($con, "SELECT url FROM file_dosen WHERE (id_cat='$id_porto' OR id_cat IN (SELECT id FROM penelitian_buku WHERE judul='$judul_kegiatan')) AND nip_dosen='$nik' AND kelompok='file_buku'");
+			while ($rf = mysqli_fetch_array($qfile)) {
+				if (file_exists($rf['url'])) @unlink($rf['url']);
+			}
+			mysqli_query($con, "DELETE FROM file_dosen WHERE (id_cat='$id_porto' OR id_cat IN (SELECT id FROM penelitian_buku WHERE judul='$judul_kegiatan')) AND nip_dosen='$nik' AND kelompok='file_buku'");
+			
+			if (mysqli_query($con, "DELETE FROM regis_dosen_penelitian WHERE id='$id_regis'")) {
+				if (!empty($judul_kegiatan)) {
+					mysqli_query($con, "DELETE FROM penelitian_buku WHERE judul = '$judul_kegiatan' AND nip_dosen = '$nik' AND id != '$id_porto'");
+				}
+				header("location:/penelitian/buku/anggota/$id_porto?m=deleted");
+			} else {
+				header("location:/penelitian/buku/anggota/$id_porto?m=not_deleted");
+			}
+		} else {
+			header("location:/penelitian/buku");
 		}
 	} else {
 		header('location:/penelitian/penelitian');

@@ -2,7 +2,53 @@
 if (empty($_SESSION['ses_user']) AND empty($_SESSION['ses_pass']) AND empty($_SESSION['ses_level'])) {
 	header('location:/login');
 } else {
-	if (@$folder[3] == 'penelitian') {
+	
+function duplicatePortfolioRecord($con, $jenis_porto, $id_porto, $nik, $role) {
+    $table_name = "penelitian_$jenis_porto";
+    if (strtolower($jenis_porto) == 'penelitian') $table_name = 'penelitian_penelitian';
+    
+    $q_orig = mysqli_query($con, "SELECT * FROM $table_name WHERE id = '$id_porto'");
+    if ($orig = mysqli_fetch_assoc($q_orig)) {
+        $cols = [];
+        $vals = [];
+        foreach ($orig as $key => $val) {
+            if ($key == 'id') continue;
+            
+            if ($key == 'nip_dosen') {
+                $val = $nik;
+            } elseif ($key == 'date_modif') {
+                $val = date('Y-m-d');
+            } elseif ($key == 'time_modif') {
+                $val = date('H:i:s');
+            } elseif ($key == 'id_peran' && strtolower($jenis_porto) == 'penelitian') {
+                $val = (is_numeric($role)) ? $role : (($role == 'Ketua') ? '1' : '2');
+            }
+            
+            $cols[] = $key;
+            if ($val === null) {
+                $vals[] = "NULL";
+            } else {
+                $vals[] = "'" . mysqli_real_escape_string($con, $val) . "'";
+            }
+        }
+        
+        $judul_field = (strtolower($jenis_porto) == 'penelitian') ? 'judul_kegiatan' : 'judul';
+        $judul_val = mysqli_real_escape_string($con, $orig[$judul_field]);
+        $q_cek = mysqli_query($con, "SELECT id FROM $table_name WHERE $judul_field = '$judul_val' AND nip_dosen = '$nik'");
+        
+        if (mysqli_num_rows($q_cek) == 0) {
+            $query_dup = "INSERT INTO $table_name (" . implode(', ', $cols) . ") VALUES (" . implode(', ', $vals) . ")";
+            mysqli_query($con, $query_dup);
+            return mysqli_insert_id($con);
+        } else {
+            $d_cek = mysqli_fetch_assoc($q_cek);
+            return $d_cek['id'];
+        }
+    }
+    return $id_porto; // fallback
+}
+
+if (@$folder[3] == 'penelitian') {
 		$nip_dosen = mysqli_real_escape_string($con, $_POST['nip_dosen']);
 		$judul_kegiatan = mysqli_real_escape_string($con, $_POST['judul_kegiatan']);
 		$afiliasi = mysqli_real_escape_string($con, $_POST['afiliasi']);
@@ -141,53 +187,11 @@ if (empty($_SESSION['ses_user']) AND empty($_SESSION['ses_pass']) AND empty($_SE
 
 		if (mysqli_query($con, $query)) {
 			$id_regis = mysqli_insert_id($con);
+			$new_id_cat = duplicatePortfolioRecord($con, 'penelitian', $id_porto, $nik, $role);
 			if (!empty($path_file)) {
 				$tgl_sekarang = date('Y-m-d');
 				$jam_sekarang = date('H:i:s');
-				mysqli_query($con, "INSERT INTO file_dosen (id_cat, nip_dosen, kelompok, value_kode, url, date_modif, time_modif) VALUES ('$id_porto', '$nik', 'file_penelitian', '$type_file', '$path_file', '$tgl_sekarang', '$jam_sekarang')");
-			}
-
-			// Duplikat data ke penelitian_penelitian untuk dosen anggota baru
-			$q_orig = mysqli_query($con, "SELECT * FROM penelitian_penelitian WHERE id = '$id_porto'");
-			if ($orig = mysqli_fetch_array($q_orig)) {
-				// Jika role berisi teks 'Ketua'/'Anggota' (legacy), sesuaikan. Jika berisi angka dari tabel kode, langsung gunakan
-				$new_id_peran = (is_numeric($role)) ? $role : (($role == 'Ketua') ? '1' : '2');
-
-				$judul_kegiatan = mysqli_real_escape_string($con, $orig['judul_kegiatan']);
-				$afiliasi = mysqli_real_escape_string($con, $orig['afiliasi']);
-				$id_skema = mysqli_real_escape_string($con, $orig['id_skema']);
-				$thn_usulan = mysqli_real_escape_string($con, $orig['thn_usulan']);
-				$tgl_mulai_kegiatan = mysqli_real_escape_string($con, $orig['tgl_mulai_kegiatan']);
-				$lama_kegiatan = mysqli_real_escape_string($con, $orig['lama_kegiatan']);
-				$thn_pelaksanaan_ke = mysqli_real_escape_string($con, $orig['thn_pelaksanaan_ke']);
-				$dana_dikti = mysqli_real_escape_string($con, $orig['dana_dikti']);
-				$dana_kampus = mysqli_real_escape_string($con, $orig['dana_kampus']);
-				$dana_mandiri = mysqli_real_escape_string($con, $orig['dana_mandiri']);
-				$dana_lain = mysqli_real_escape_string($con, $orig['dana_lain']);
-				$no_sk = mysqli_real_escape_string($con, $orig['no_sk']);
-				$tgl_sk = mysqli_real_escape_string($con, $orig['tgl_sk']);
-				$mitra = mysqli_real_escape_string($con, $orig['mitra']);
-				$libatkan_mhs = mysqli_real_escape_string($con, $orig['libatkan_mhs']);
-				$rujukan_ta = mysqli_real_escape_string($con, $orig['rujukan_ta']);
-				$kelompok_bidang = mysqli_real_escape_string($con, $orig['kelompok_bidang']);
-				$lokasi = mysqli_real_escape_string($con, $orig['lokasi']);
-
-				// Periksa apakah sudah ada (mencegah duplikat jika form di-resubmit)
-				$q_cek_dup = mysqli_query($con, "SELECT id FROM penelitian_penelitian WHERE judul_kegiatan = '$judul_kegiatan' AND nip_dosen = '$nik'");
-				if (mysqli_num_rows($q_cek_dup) == 0) {
-					$insert_penelitian = "INSERT INTO penelitian_penelitian (
-				nip_dosen, judul_kegiatan, afiliasi, id_skema, thn_usulan, tgl_mulai_kegiatan,
-				lama_kegiatan, thn_pelaksanaan_ke, dana_dikti, dana_kampus, dana_mandiri,
-				dana_lain, id_peran, no_sk, tgl_sk, mitra, libatkan_mhs, rujukan_ta,
-				kelompok_bidang, lokasi, date_modif, time_modif
-			) VALUES (
-				'$nik', '$judul_kegiatan', '$afiliasi', '$id_skema', '$thn_usulan', '$tgl_mulai_kegiatan',
-				'$lama_kegiatan', '$thn_pelaksanaan_ke', '$dana_dikti', '$dana_kampus', '$dana_mandiri',
-				'$dana_lain', '$new_id_peran', '$no_sk', '$tgl_sk', '$mitra', '$libatkan_mhs', '$rujukan_ta',
-				'$kelompok_bidang', '$lokasi', CURDATE(), CURTIME()
-			)";
-					mysqli_query($con, $insert_penelitian);
-				}
+				mysqli_query($con, "INSERT INTO file_dosen (id_cat, nip_dosen, kelompok, value_kode, url, date_modif, time_modif) VALUES ('$new_id_cat', '$nik', 'file_penelitian', '$type_file', '$path_file', '$tgl_sekarang', '$jam_sekarang')");
 			}
 
 			header("location:/penelitian/penelitian/anggota/$id_porto?m=inserted");
@@ -372,10 +376,10 @@ if (empty($_SESSION['ses_user']) AND empty($_SESSION['ses_pass']) AND empty($_SE
 		
 		if (mysqli_query($con, $query)) {
 			$id_regis = mysqli_insert_id($con);
+			$new_id_cat = duplicatePortfolioRecord($con, 'patenhki', $id_porto, $nik, $role);
 			if (!empty($path_file)) {
-				mysqli_query($con, "INSERT INTO file_dosen (id_cat, nip_dosen, kelompok, value_kode, url, date_modif, time_modif) VALUES ('$id_porto', '$nik', 'file_patenhki', '$type_file', '$path_file', '$date_regis', '$time_regis')");
+				mysqli_query($con, "INSERT INTO file_dosen (id_cat, nip_dosen, kelompok, value_kode, url, date_modif, time_modif) VALUES ('$new_id_cat', '$nik', 'file_patenhki', '$type_file', '$path_file', '$date_regis', '$time_regis')");
 			}
-			
 			header("location:/penelitian/patenhki/anggota/$id_porto?m=inserted");
 		} else {
 			header("location:/penelitian/patenhki/anggota/$id_porto?m=not_inserted");
@@ -409,10 +413,10 @@ if (empty($_SESSION['ses_user']) AND empty($_SESSION['ses_pass']) AND empty($_SE
 		
 		if (mysqli_query($con, $query)) {
 			$id_regis = mysqli_insert_id($con);
+			$new_id_cat = duplicatePortfolioRecord($con, 'karya', $id_porto, $nik, $role);
 			if (!empty($path_file)) {
-				mysqli_query($con, "INSERT INTO file_dosen (id_cat, nip_dosen, kelompok, value_kode, url, date_modif, time_modif) VALUES ('$id_porto', '$nik', 'file_karya', '$type_file', '$path_file', '$date_regis', '$time_regis')");
+				mysqli_query($con, "INSERT INTO file_dosen (id_cat, nip_dosen, kelompok, value_kode, url, date_modif, time_modif) VALUES ('$new_id_cat', '$nik', 'file_karya', '$type_file', '$path_file', '$date_regis', '$time_regis')");
 			}
-			
 			header("location:/penelitian/karya/anggota/$id_porto?m=inserted");
 		} else {
 			header("location:/penelitian/karya/anggota/$id_porto?m=not_inserted");
@@ -503,10 +507,10 @@ if (empty($_SESSION['ses_user']) AND empty($_SESSION['ses_pass']) AND empty($_SE
 		
 		if (mysqli_query($con, $query)) {
 			$id_regis = mysqli_insert_id($con);
+			$new_id_cat = duplicatePortfolioRecord($con, 'jurnal', $id_porto, $nik, $role);
 			if (!empty($path_file)) {
-				mysqli_query($con, "INSERT INTO file_dosen (id_cat, nip_dosen, kelompok, value_kode, url, date_modif, time_modif) VALUES ('$id_porto', '$nik', 'file_jurnal', '$type_file', '$path_file', '$date_regis', '$time_regis')");
+				mysqli_query($con, "INSERT INTO file_dosen (id_cat, nip_dosen, kelompok, value_kode, url, date_modif, time_modif) VALUES ('$new_id_cat', '$nik', 'file_jurnal', '$type_file', '$path_file', '$date_regis', '$time_regis')");
 			}
-			
 			header("location:/penelitian/jurnal/anggota/$id_porto?m=inserted");
 		} else {
 			header("location:/penelitian/jurnal/anggota/$id_porto?m=not_inserted");
@@ -595,10 +599,10 @@ if (empty($_SESSION['ses_user']) AND empty($_SESSION['ses_pass']) AND empty($_SE
 		
 		if (mysqli_query($con, $query)) {
 			$id_regis = mysqli_insert_id($con);
+			$new_id_cat = duplicatePortfolioRecord($con, 'prosiding', $id_porto, $nik, $role);
 			if (!empty($path_file)) {
-				mysqli_query($con, "INSERT INTO file_dosen (id_cat, nip_dosen, kelompok, value_kode, url, date_modif, time_modif) VALUES ('$id_porto', '$nik', 'file_prosiding', '$type_file', '$path_file', '$date_regis', '$time_regis')");
+				mysqli_query($con, "INSERT INTO file_dosen (id_cat, nip_dosen, kelompok, value_kode, url, date_modif, time_modif) VALUES ('$new_id_cat', '$nik', 'file_prosiding', '$type_file', '$path_file', '$date_regis', '$time_regis')");
 			}
-			
 			header("location:/penelitian/prosiding/anggota/$id_porto?m=inserted");
 		} else {
 			header("location:/penelitian/prosiding/anggota/$id_porto?m=not_inserted");

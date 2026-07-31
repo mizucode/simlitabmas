@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['validasi_karya'])) {
             $nip_dosen = $d_pen['nip_dosen'];
             $date_regis = date('Y-m-d');
             $time_regis = date('H:i:s');
-            $registered_by = mysqli_real_escape_string($con, @$_SESSION['ses_user']);
+            $registered_by = $nip_dosen;
 
             // Mencegah duplikasi di tabel pivot
             $cek_pivot = mysqli_query($con, "SELECT id FROM regis_dosen_penelitian WHERE id_porto='$id_karya' AND nik='$nip_dosen' AND jenis_porto='karya'");
@@ -149,7 +149,7 @@ if (empty($folder[4])) {
                                     </td>
                                     <td class="text-center align-middle">
                                         <button type="button" class="btn btn-xs btn-primary shadow-sm" data-toggle="modal" data-target="#modalValidasiPending<?= $r['id_karya'] ?>">
-                                            <i class="fas fa-check-circle"></i> Validasi
+                                            Validasi
                                         </button>
                                         
                                         <!-- Modal Validasi Pending -->
@@ -185,7 +185,7 @@ if (empty($folder[4])) {
                                                             </div>
                                                             
                                                             <hr>
-                                                            <h6 class="font-weight-bold text-primary mb-2"><i class="fas fa-info-circle"></i> Detail Karya Tanpa HKI</h6>
+                                                            <h6 class="font-weight-bold text-primary mb-2">Detail Karya Tanpa HKI</h6>
                                                             <div class="p-3 border rounded shadow-sm" style="max-height: 45vh; overflow-y: auto; background-color: #f8f9fc;">
                                                                 <div class="table-responsive">
                                                                     <table class="table table-sm table-borderless table-striped text-left mb-0 text-wrap" style="font-size: 0.9rem; table-layout: fixed; word-wrap: break-word;">
@@ -200,7 +200,7 @@ if (empty($folder[4])) {
                                                                             while ($d_file = mysqli_fetch_array($q_file)) {
                                                                                 $file_url = (strpos($d_file['url'], 'http') === 0) ? $d_file['url'] : $storage_url . $d_file['url'];
                                                                                 $jenis = !empty($d_file['jenis_file_desc']) ? htmlspecialchars($d_file['jenis_file_desc']) : 'File Lampiran';
-                                                                                echo "<tr><th>{$jenis}</th><td>: <a href=\"{$file_url}\" target=\"_blank\" class=\"btn btn-xs btn-info\"><i class=\"fas fa-download\"></i> Unduh File</a></td></tr>";
+                                                                                echo "<tr><th>{$jenis}</th><td>: <a href=\"{$file_url}\" target=\"_blank\" class=\"btn btn-xs btn-info\"><i class=\"fas fa-download\"></i>Unduh File</a></td></tr>";
                                                                             }
                                                                         }
                                                                         ?>

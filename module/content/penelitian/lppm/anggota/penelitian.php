@@ -204,12 +204,12 @@ $nama_peran_display = !empty($porto['nama_peran']) ? $porto['nama_peran'] : ($po
                   FROM regis_dosen_penelitian r 
                   LEFT JOIN dosen d ON r.nik = d.nik 
                   LEFT JOIN (
-                      SELECT id_cat, nip_dosen, kelompok, MAX(url) as url 
+                      SELECT id_cat, nip_dosen, kelompok, MAX(url) as url, MAX(value_kode) as value_kode 
                       FROM file_dosen 
                       GROUP BY id_cat, nip_dosen, kelompok
                   ) f ON f.id_cat = r.id_porto AND f.nip_dosen = r.nik AND f.kelompok = 'file_penelitian' 
                   LEFT JOIN kode k ON r.role = k.value AND k.kelompok = 'peran_penelitian' 
-                  LEFT JOIN kode k2 ON r.type_file = k2.value AND k2.kelompok = 'file_penelitian'
+                  LEFT JOIN kode k2 ON f.value_kode = k2.value AND k2.kelompok = 'file_penelitian'
                   WHERE r.id_porto = '$id_porto' AND r.jenis_porto = 'Penelitian' 
                   ORDER BY r.id ASC
               ");
@@ -217,7 +217,7 @@ $nama_peran_display = !empty($porto['nama_peran']) ? $porto['nama_peran'] : ($po
               if (mysqli_num_rows($q_regis) > 0) {
                 $no = 1;
                 while ($row = mysqli_fetch_array($q_regis)) {
-                  $type_text = !empty($row['file_desc']) ? $row['file_desc'] : (!empty($row['type_file']) ? $row['type_file'] : 'Berkas');
+                  $type_text = !empty($row['file_desc']) ? $row['file_desc'] : (!empty($row['value_kode']) ? $row['value_kode'] : 'Berkas');
                   $prodi_str = "";
                   ?>
                   <tr>
@@ -242,13 +242,13 @@ $nama_peran_display = !empty($porto['nama_peran']) ? $porto['nama_peran'] : ($po
                     </td>
                     <td class="text-center align-middle">
                       <button type="button" class="btn btn-xs btn-info shadow-sm" title="Edit Anggota" data-toggle="modal"
-                        data-target="#editAnggota<?= $row['id'] ?>">
-                        <i class="fas fa-edit"></i>
-                      </button>
-                      <button type="button" class="btn btn-xs btn-danger shadow-sm" title="Hapus Anggota"
-                        data-toggle="modal" data-target="#hapusAnggota<?= $row['id'] ?>">
-                        <i class="fas fa-trash"></i>
-                      </button>
+                          data-target="#editAnggota<?= $row['id'] ?>">
+                          <i class="fas fa-edit"></i>
+                        </button>
+                        <button type="button" class="btn btn-xs btn-danger shadow-sm" title="Hapus Anggota"
+                          data-toggle="modal" data-target="#hapusAnggota<?= $row['id'] ?>">
+                          <i class="fas fa-trash"></i>
+                        </button>
                     </td>
                   </tr>
 
@@ -291,7 +291,7 @@ $nama_peran_display = !empty($porto['nama_peran']) ? $porto['nama_peran'] : ($po
                                 <?php
                                 $qkode_file = mysqli_query($con, "SELECT * FROM kode WHERE kelompok='file_penelitian' ORDER BY id");
                                 while ($kf = mysqli_fetch_array($qkode_file)) {
-                                  $selected = ($row['type_file'] == $kf['desc']) ? 'selected' : '';
+                                  $selected = ($row['value_kode'] == $kf['desc']) ? 'selected' : '';
                                   echo "<option value='{$kf['desc']}' {$selected}>{$kf['desc']}</option>";
                                 }
                                 ?>
