@@ -607,6 +607,43 @@ if (@$folder[3] == 'penelitian') {
 		} else {
 			header("location:/penelitian/prosiding/anggota/$id_porto?m=not_inserted");
 		}
+	} elseif (@$folder[3] == 'anggota_chapter') {
+		$id_porto = mysqli_real_escape_string($con, $_POST['id_porto']);
+		$nik = mysqli_real_escape_string($con, $_POST['nik']);
+		$role = mysqli_real_escape_string($con, $_POST['role']);
+		$jenis_porto = 'chapter';
+		$date_regis = date('Y-m-d');
+		$time_regis = date('H:i:s');
+		
+		$type_file = mysqli_real_escape_string($con, $_POST['type_file']);
+		
+		$path_file = '';
+		if (!empty($_FILES['file']['name'])) {
+			$file_name = $_FILES['file']['name'];
+			$ext = pathinfo($file_name, PATHINFO_EXTENSION);
+			$new_name = "anggota_chapter_" . $id_porto . "_" . time() . "." . $ext;
+			UploadChapter($new_name);
+			$path_file = "file/chapter/" . $new_name;
+		}
+		
+		$registered_by = mysqli_real_escape_string($con, $_SESSION['ses_user']);
+		
+		$query = "INSERT INTO regis_dosen_penelitian (
+			id_porto, nik, role, jenis_porto, date_regis, time_regis, type_file, registered_by
+		) VALUES (
+			'$id_porto', '$nik', '$role', '$jenis_porto', '$date_regis', '$time_regis', '$type_file', '$registered_by'
+		)";
+		
+		if (mysqli_query($con, $query)) {
+			$id_regis = mysqli_insert_id($con);
+			$new_id_cat = duplicatePortfolioRecord($con, 'chapter', $id_porto, $nik, $role);
+			if (!empty($path_file)) {
+				mysqli_query($con, "INSERT INTO file_dosen (id_cat, nip_dosen, kelompok, value_kode, url, date_modif, time_modif) VALUES ('$new_id_cat', '$nik', 'file_chapter', '$type_file', '$path_file', '$date_regis', '$time_regis')");
+			}
+			header("location:/penelitian/chapter/anggota/$id_porto?m=inserted");
+		} else {
+			header("location:/penelitian/chapter/anggota/$id_porto?m=not_inserted");
+		}
 	} else {
 		header('location:/penelitian/penelitian');
 	}

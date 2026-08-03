@@ -158,17 +158,26 @@ if (!$porto) {
             </thead>
             <tbody style="font-size: 0.9rem;">
               <?php
+              $judul_porto_esc = mysqli_real_escape_string($con, $porto['judul']);
               $q_regis = mysqli_query($con, "
-                  SELECT r.*, d.name_glr, d.name, f.url as url_file, k.`desc` as peran_desc, k2.`desc` as file_desc 
+                  SELECT r.*, d.name_glr, d.name, k.`desc` as peran_desc, k2.`desc` as file_desc,
+                         (SELECT url FROM file_dosen 
+                          WHERE nip_dosen = r.nik AND kelompok = 'file_prosiding' 
+                          AND (id_cat = r.id_porto OR id_cat IN (SELECT id FROM penelitian_prosiding WHERE nip_dosen = r.nik AND (judul = '$judul_porto_esc' OR id = r.id_porto)))
+                          ORDER BY id DESC LIMIT 1) as url_file,
+                         (SELECT value_kode FROM file_dosen 
+                          WHERE nip_dosen = r.nik AND kelompok = 'file_prosiding' 
+                          AND (id_cat = r.id_porto OR id_cat IN (SELECT id FROM penelitian_prosiding WHERE nip_dosen = r.nik AND (judul = '$judul_porto_esc' OR id = r.id_porto)))
+                          ORDER BY id DESC LIMIT 1) as value_kode
                   FROM regis_dosen_penelitian r 
                   LEFT JOIN dosen d ON r.nik = d.nik 
-                  LEFT JOIN (
-                      SELECT id_cat, nip_dosen, kelompok, MAX(url) as url, MAX(value_kode) as value_kode 
-                      FROM file_dosen 
-                      GROUP BY id_cat, nip_dosen, kelompok
-                  ) f ON f.id_cat = r.id_porto AND f.nip_dosen = r.nik AND f.kelompok = 'file_prosiding' 
                   LEFT JOIN kode k ON r.role = k.value AND k.kelompok = 'peran_penelitian' 
-                  LEFT JOIN kode k2 ON f.value_kode = k2.value AND k2.kelompok = 'file_prosiding'
+                  LEFT JOIN kode k2 ON (
+                      SELECT value_kode FROM file_dosen 
+                      WHERE nip_dosen = r.nik AND kelompok = 'file_prosiding' 
+                      AND (id_cat = r.id_porto OR id_cat IN (SELECT id FROM penelitian_prosiding WHERE nip_dosen = r.nik AND (judul = '$judul_porto_esc' OR id = r.id_porto)))
+                      ORDER BY id DESC LIMIT 1
+                  ) = k2.value AND k2.kelompok = 'file_prosiding'
                   WHERE r.id_porto = '$id_porto' AND r.jenis_porto = 'prosiding' 
                   ORDER BY r.id ASC
               ");

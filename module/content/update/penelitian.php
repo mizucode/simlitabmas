@@ -294,6 +294,44 @@ if (empty($_SESSION['ses_user']) AND empty($_SESSION['ses_pass']) AND empty($_SE
 		} else {
 			header("location:" . $redirect . "?m=not_updated");
 		}
+	} elseif (@$folder[3] == 'chapter') {
+		$id = mysqli_real_escape_string($con, $_POST['id']);
+		$jenis_chapter = mysqli_real_escape_string($con, $_POST['jenis_chapter']);
+		$judul = mysqli_real_escape_string($con, $_POST['judul']);
+		$judul_chapter = mysqli_real_escape_string($con, $_POST['judul_chapter']);
+		$tgl_terbit = mysqli_real_escape_string($con, $_POST['tgl_terbit']);
+		$jmlh_halaman = mysqli_real_escape_string($con, @$_POST['jmlh_halaman']);
+		$penerbit = mysqli_real_escape_string($con, $_POST['penerbit']);
+		$isbn = mysqli_real_escape_string($con, $_POST['isbn']);
+		$bahasa = mysqli_real_escape_string($con, @$_POST['bahasa']);
+		$link_lit = mysqli_real_escape_string($con, @$_POST['link_lit']);
+		$link_abmas = mysqli_real_escape_string($con, @$_POST['link_abmas']);
+		$redirect = isset($_POST['redirect']) ? $_POST['redirect'] : '/penelitian/chapter';
+
+		$q_old = mysqli_query($con, "SELECT judul FROM penelitian_chapter WHERE id='$id'");
+		$old_data = mysqli_fetch_array($q_old);
+		$old_judul = mysqli_real_escape_string($con, $old_data['judul'] ?? '');
+
+		$query = "UPDATE penelitian_chapter SET 
+			jenis_chapter='$jenis_chapter',
+			judul='$judul',
+			judul_chapter='$judul_chapter',
+			tgl_terbit='$tgl_terbit',
+			jmlh_halaman='$jmlh_halaman',
+			penerbit='$penerbit',
+			isbn='$isbn',
+			bahasa='$bahasa',
+			link_lit='$link_lit',
+			link_abmas='$link_abmas',
+			date_modif=CURDATE(),
+			time_modif=CURTIME()
+			WHERE id='$id' OR (nip_dosen IN (SELECT nik FROM regis_dosen_penelitian WHERE id_porto='$id' AND jenis_porto='chapter') AND (judul='$old_judul' OR judul='$judul'))";
+
+		if (mysqli_query($con, $query)) {
+			header("location:" . $redirect . "?m=updated");
+		} else {
+			header("location:" . $redirect . "?m=not_updated");
+		}
 	} elseif (@$folder[3] == 'anggota_patenhki') {
 		$id_regis = mysqli_real_escape_string($con, $_POST['id_regis']);
 		$id_porto = mysqli_real_escape_string($con, $_POST['id_porto']);
@@ -473,6 +511,42 @@ if (empty($_SESSION['ses_user']) AND empty($_SESSION['ses_pass']) AND empty($_SE
 			header("location:/penelitian/buku/anggota/$id_porto?m=updated");
 		} else {
 			header("location:/penelitian/buku/anggota/$id_porto?m=not_updated");
+		}
+	} elseif (@$folder[3] == 'anggota_chapter') {
+		$id_regis = mysqli_real_escape_string($con, $_POST['id_regis']);
+		$id_porto = mysqli_real_escape_string($con, $_POST['id_porto']);
+		$role = mysqli_real_escape_string($con, $_POST['role']);
+		$type_file = mysqli_real_escape_string($con, $_POST['type_file']);
+		
+		if (!empty($_FILES['file']['name'])) {
+			$file_name = $_FILES['file']['name'];
+			$ext = pathinfo($file_name, PATHINFO_EXTENSION);
+			$new_name = "anggota_chapter_" . $id_porto . "_" . time() . "." . $ext;
+			UploadChapter($new_name);
+			$path = "file/chapter/" . $new_name;
+
+			$qnik = mysqli_query($con, "SELECT nik FROM regis_dosen_penelitian WHERE id='$id_regis'");
+			$dnik = mysqli_fetch_array($qnik);
+			$nik_anggota = $dnik['nik'];
+			
+			// Hapus file lama jika ada (berdasarkan id_porto dan nip_dosen)
+			$q_old_file = mysqli_query($con, "SELECT url FROM file_dosen WHERE id_cat='$id_porto' AND nip_dosen='$nik_anggota' AND kelompok='file_chapter'");
+			while ($r_old = mysqli_fetch_array($q_old_file)) {
+				if (file_exists($r_old['url'])) @unlink($r_old['url']);
+			}
+			mysqli_query($con, "DELETE FROM file_dosen WHERE id_cat='$id_porto' AND nip_dosen='$nik_anggota' AND kelompok='file_chapter'");
+
+			$tgl_sekarang = date('Y-m-d');
+			$jam_sekarang = date('H:i:s');
+			mysqli_query($con, "INSERT INTO file_dosen (id_cat, nip_dosen, kelompok, value_kode, url, date_modif, time_modif) VALUES ('$id_porto', '$nik_anggota', 'file_chapter', '$type_file', '$path', '$tgl_sekarang', '$jam_sekarang')");
+		}
+
+		$query = "UPDATE regis_dosen_penelitian SET role = '$role' WHERE id = '$id_regis'";
+
+		if (mysqli_query($con, $query)) {
+			header("location:/penelitian/chapter/anggota/$id_porto?m=updated");
+		} else {
+			header("location:/penelitian/chapter/anggota/$id_porto?m=not_updated");
 		}
 	} else {
 		header('location:/penelitian/penelitian');
