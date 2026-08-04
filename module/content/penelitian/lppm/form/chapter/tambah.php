@@ -11,6 +11,18 @@
 									<form role="form" enctype="multipart/form-data" method="post" action="/insert/penelitian/chapter">
 										<div class="form-group">
 											<p>
+											<label>Dosen<span class="text-danger"> *</span></label>
+											<select class="form-control select2-dosen" name="nip_dosen" style="width: 100%;" required>
+												<option value="">-- Pilih Dosen --</option>
+												<?php
+												$qdosen = mysqli_query($con, "SELECT nik, name_glr FROM dosen ORDER BY name");
+												while ($d = mysqli_fetch_array($qdosen)) {
+													echo "<option value='{$d['nik']}'>{$d['nik']} - {$d['name_glr']}</option>";
+												}
+												?>
+											</select>
+											</p>
+											<p>
 											<label>Jenis<span class="text-danger"> *</span></label>
 											<select class='form-control' name='jenis_chapter' required>
 												<option value=''>-- Pilih --</option>
@@ -111,3 +123,13 @@
 							</div>
 						</div>
 			  	        </div>
+<script>
+  $(function () {
+    if ($.fn.select2) {
+      $('.select2-dosen').select2({
+        theme: 'bootstrap4',
+        dropdownParent: $('#tambah')
+      });
+    }
+  });
+</script>
