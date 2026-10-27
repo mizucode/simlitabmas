@@ -51,7 +51,7 @@ if (empty($_SESSION['ses_user']) AND empty($_SESSION['ses_pass']) AND empty($_SE
 							<div class="card-tools">
 								<?php
 								try {
-									$q_pending = mysqli_query($con, "SELECT COUNT(DISTINCT pt.id) as jml FROM penelitian_tulisan pt LEFT JOIN dosen d ON (pt.nip_dosen=d.nik OR pt.nip_dosen=d.nip OR pt.nip_dosen=d.nidn) LEFT JOIN regis_dosen_penelitian r ON (pt.id=r.id_porto AND r.jenis_porto='tulisan') LEFT JOIN dosen d2 ON (r.nik=d2.nik OR r.nik=d2.nip OR r.nik=d2.nidn) WHERE (pt.status='1' OR pt.status IS NULL OR pt.status='') AND pt.tgl_terbit>='$tgl_start' AND pt.tgl_terbit<='$tgl_end' AND ((d.name_glr IS NOT NULL AND d.name_glr != '') OR (d.name IS NOT NULL AND d.name != '') OR (d2.name_glr IS NOT NULL AND d2.name_glr != '') OR (d2.name IS NOT NULL AND d2.name != ''))");
+									$q_pending = mysqli_query($con, "SELECT COUNT(DISTINCT judul) as jml FROM penelitian_tulisan WHERE (status='1' OR status IS NULL OR status='') AND tgl_terbit>='$tgl_start' AND tgl_terbit<='$tgl_end'");
 									$r_pending = mysqli_fetch_assoc($q_pending);
 									$jml_pending = $r_pending ? $r_pending['jml'] : 0;
 								} catch (Throwable $e) {
@@ -89,7 +89,7 @@ if (empty($_SESSION['ses_user']) AND empty($_SESSION['ses_pass']) AND empty($_SE
 								<tbody>
 									<?php
 									$no = 1;
-									$q = mysqli_query($con, "SELECT penelitian_tulisan.*, penelitian_tulisan.id AS id_tulisan, dosen.name_glr FROM penelitian_tulisan LEFT JOIN dosen ON (penelitian_tulisan.nip_dosen=dosen.nik OR penelitian_tulisan.nip_dosen=dosen.nip OR penelitian_tulisan.nip_dosen=dosen.nidn) WHERE tgl_terbit>='$tgl_start' AND tgl_terbit<='$tgl_end' AND penelitian_tulisan.status='2' ORDER BY penelitian_tulisan.id DESC");
+									$q = mysqli_query($con, "SELECT p1.*, p1.id AS id_tulisan, IFNULL(dosen.name_glr, mhs.name) AS name_glr FROM penelitian_tulisan p1 INNER JOIN (SELECT MIN(id) as min_id FROM penelitian_tulisan WHERE tgl_terbit>='$tgl_start' AND tgl_terbit<='$tgl_end' AND status='2' GROUP BY judul) p2 ON p1.id = p2.min_id LEFT JOIN dosen ON (p1.nip_dosen=dosen.nik OR p1.nip_dosen=dosen.nip OR p1.nip_dosen=dosen.nidn) LEFT JOIN mhs ON p1.nip_dosen=mhs.nim ORDER BY p1.id DESC");
 									if (mysqli_num_rows($q) > 0) {
 										while ($r = mysqli_fetch_array($q)) {
 											$id_jenis = mysqli_fetch_array(mysqli_query($con, "SELECT * FROM kode WHERE value='$r[id_jenis]' AND kelompok='tulisan' LIMIT 1"));
@@ -126,7 +126,7 @@ if (empty($_SESSION['ses_user']) AND empty($_SESSION['ses_pass']) AND empty($_SE
 												<td class="align-middle text-center">
 													<a href="/penelitian/tulisan/anggota/<?= $r['id_tulisan'] ?>" class="badge badge-info p-2 px-3"
 														style="font-size: 0.9rem;">
-														<i class="fas fa-users mr-1"></i> <?= $jml_dosen ?> Dosen
+														<i class="fas fa-users mr-1"></i> <?= $jml_dosen ?> Anggota
 													</a>
 												</td>
 												<td class="align-middle"><?= htmlspecialchars($nama_dosen) ?></td>
@@ -149,12 +149,14 @@ if (empty($_SESSION['ses_user']) AND empty($_SESSION['ses_pass']) AND empty($_SE
 												<td class="align-middle text-center"><?= htmlspecialchars($r['tgl_terbit'] ?? '-') ?></td>
 												<td class="align-middle text-center">
 													<?php
+													$judul_esc = mysqli_real_escape_string($con, $r['judul']);
 													$qfile_pivot = mysqli_query($con, "
-														SELECT f.url as url_file, kode.desc as type_file, d.name_glr
+														SELECT f.url as url_file, kode.desc as type_file, IFNULL(d.name_glr, m.name) AS name_glr
 														FROM file_dosen f
 														LEFT JOIN dosen d ON f.nip_dosen = d.nik
+														LEFT JOIN mhs m ON f.nip_dosen = m.nim
 														LEFT JOIN kode ON f.value_kode = kode.value AND kode.kelompok = 'file_tulisan'
-														WHERE f.id_cat = '{$r['id_tulisan']}' AND f.kelompok = 'file_tulisan'
+														WHERE f.id_cat IN (SELECT id FROM penelitian_tulisan WHERE judul='$judul_esc') AND f.kelompok = 'file_tulisan'
 													");
 
 													$jml_file = mysqli_num_rows($qfile_pivot);

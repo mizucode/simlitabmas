@@ -170,7 +170,7 @@ ob_start();
 			}
 			else {
 				$qta = mysqli_fetch_array(mysqli_query($con,"SELECT kode FROM ta WHERE active='Y' "));
-				$ta = $qta[kode];
+				$ta = $qta['kode'];
 			}
 
 
@@ -454,7 +454,7 @@ ob_start();
 					}
 				
 					$dsks=mysqli_query($con,"SELECT SUM(kurikulum_mk.sks) FROM kontrak,kurikulum_mk,kelas,ta WHERE kelas.kode=kontrak.paket AND kelas.kurikulum=kurikulum_mk.kurikulum AND kelas.ta=ta.kode AND kontrak.id_mk=kurikulum_mk.mk AND kontrak.ta=ta.kode AND kontrak.dosen='$folder[3]' AND ta.kode='$folder[4]' ");
-					$sks=mysql_result($dsks, 0, 0);
+					$sks=($dsks && $row = mysqli_fetch_row($dsks)) ? ($row[0] ?? 0) : 0;
 					echo"
 						<tr>
 						<td colspan=3>Total Sks</td>

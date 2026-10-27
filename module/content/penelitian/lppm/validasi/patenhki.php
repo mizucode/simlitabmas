@@ -6,7 +6,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['validasi_patenhki'])) 
     $status = mysqli_real_escape_string($con, $_POST['status']);
     $keterangan_validasi = mysqli_real_escape_string($con, $_POST['keterangan_validasi']);
 
-    $update = mysqli_query($con, "UPDATE penelitian_patenhki SET status='$status', keterangan_validasi='$keterangan_validasi' WHERE id='$id_patenhki'");
+    $q_judul = mysqli_query($con, "SELECT judul FROM penelitian_patenhki WHERE id='$id_patenhki'");
+    $d_judul = mysqli_fetch_assoc($q_judul);
+    $judul_esc = mysqli_real_escape_string($con, $d_judul['judul'] ?? '');
+
+    $update = mysqli_query($con, "UPDATE penelitian_patenhki SET status='$status', keterangan_validasi='$keterangan_validasi' WHERE judul='$judul_esc'");
     
     // Masukkan ke pivot tabel jika disetujui (status = 2)
     if ($status == '2') {
@@ -117,8 +121,7 @@ if (empty($folder[4])) {
                     <tbody>
                         <?php
                         $no = 1;
-                        // Query with condition tgl_start, tgl_end for Pending
-                        $q = mysqli_query($con, "SELECT *, penelitian_patenhki.id AS id_patenhki, penelitian_patenhki.status AS status_validasi FROM penelitian_patenhki, dosen WHERE penelitian_patenhki.nip_dosen=dosen.nik AND tgl_paten>='$tgl_start' AND tgl_paten<='$tgl_end' AND (penelitian_patenhki.status='1' OR penelitian_patenhki.status IS NULL OR penelitian_patenhki.status='') ORDER BY penelitian_patenhki.id DESC");
+                        $q = mysqli_query($con, "SELECT ph.*, ph.id AS id_patenhki, ph.status AS status_validasi, IFNULL(dosen.name_glr, mhs.name) AS name_glr FROM penelitian_patenhki ph INNER JOIN (SELECT MIN(id) as min_id FROM penelitian_patenhki WHERE tgl_paten>='$tgl_start' AND tgl_paten<='$tgl_end' AND (status='1' OR status IS NULL OR status='') GROUP BY judul) p2 ON ph.id = p2.min_id LEFT JOIN dosen ON ph.nip_dosen=dosen.nik LEFT JOIN mhs ON ph.nip_dosen=mhs.nim ORDER BY ph.id DESC");
                         
                         if (mysqli_num_rows($q) > 0) {
                             while ($r = mysqli_fetch_array($q)) {
@@ -284,7 +287,7 @@ if (empty($folder[4])) {
                         <?php
                         $no = 1;
                         // Query with condition tgl_start, tgl_end for Ditolak
-                        $q_ditolak = mysqli_query($con, "SELECT *, penelitian_patenhki.id AS id_patenhki, penelitian_patenhki.status AS status_validasi FROM penelitian_patenhki, dosen WHERE penelitian_patenhki.nip_dosen=dosen.nik AND tgl_paten>='$tgl_start' AND tgl_paten<='$tgl_end' AND penelitian_patenhki.status='3' ORDER BY penelitian_patenhki.id DESC");
+                        $q_ditolak = mysqli_query($con, "SELECT penelitian_patenhki.*, penelitian_patenhki.id AS id_patenhki, penelitian_patenhki.status AS status_validasi, IFNULL(dosen.name_glr, mhs.name) AS name_glr FROM penelitian_patenhki LEFT JOIN dosen ON penelitian_patenhki.nip_dosen=dosen.nik LEFT JOIN mhs ON penelitian_patenhki.nip_dosen=mhs.nim WHERE tgl_paten>='$tgl_start' AND tgl_paten<='$tgl_end' AND penelitian_patenhki.status='3' ORDER BY penelitian_patenhki.id DESC");
                         
                         if (mysqli_num_rows($q_ditolak) > 0) {
                             while ($r = mysqli_fetch_array($q_ditolak)) {

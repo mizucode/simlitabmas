@@ -14,14 +14,14 @@
 				<div class="modal-body">
 					<div class="form-group">
 						<p>
-							<label>Dosen Peneliti<span class="text-danger"> *</span></label>
+							<label>Dosen Peneliti / Mahasiswa<span class="text-danger"> *</span></label>
 							<select class="form-control select2-dosen-hki" name="nip_dosen" style="width: 100%;" required>
-								<option value="">-- Pilih Dosen --</option>
+								<option value="">-- Cari Nama/NIK/NIM --</option>
 								<?php
-								$qdosen = mysqli_query($con, "SELECT nik, name_glr FROM dosen ORDER BY name");
+								$qdosen = mysqli_query($con, "SELECT nik, name_glr, 'Dosen' AS tipe FROM dosen UNION SELECT nim AS nik, name AS name_glr, 'Mahasiswa' AS tipe FROM mhs ORDER BY name_glr");
 								while ($d = mysqli_fetch_array($qdosen)) {
 									?>
-									<option value="<?= $d['nik'] ?>"><?= $d['nik'] ?> - <?= $d['name_glr'] ?></option>
+									<option value="<?= $d['nik'] ?>"><?= $d['name_glr'] ?> (<?= $d['nik'] ?> - <?= $d['tipe'] ?>)</option>
 									<?php
 								}
 								?>

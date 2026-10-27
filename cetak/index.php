@@ -12,7 +12,7 @@ session_start();
 
 		if($_SESSION['ses_login']==1){
 			if(!validation()){
-				$_SESSION[ses_login] = 0;
+				$_SESSION['ses_login'] = 0;
 			}
 		}
 

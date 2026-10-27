@@ -40,10 +40,10 @@ ob_start();
 <?php
 				$no=1;
 				while($p=mysqli_fetch_array($qp)) {
-					$name = strtoupper($p[name]);
-					$desa = ucwords(strtolower($p[desa]));
-					$kec = ucwords(strtolower($p[kec]));
-					$kota = ucwords(strtolower($p[kota]));
+					$name = strtoupper($p['name']);
+					$desa = ucwords(strtolower($p['desa']));
+					$kec = ucwords(strtolower($p['kec']));
+					$kota = ucwords(strtolower($p['kota']));
 					echo"
 
 					<tr>
@@ -92,7 +92,7 @@ ob_start();
 <?php
 				$no=1;
 				while($cp=mysqli_fetch_array($qcp)) {
-					$cname = strtoupper($cp[name]);
+					$cname = strtoupper($cp['name']);
 					echo"
 
 					<tr>
@@ -149,11 +149,11 @@ ob_start();
 					<tbody>
 <?php
 				while($p=mysqli_fetch_array($qp)) {
-					$name = strtoupper($p[name]);
+					$name = strtoupper($p['name']);
 					$dosen1 = mysqli_fetch_array(mysqli_query($con,"SELECT name_glr FROM dosen WHERE nik='$p[dosen1]' "));
 					$dosen2 = mysqli_fetch_array(mysqli_query($con,"SELECT name_glr FROM dosen WHERE nik='$p[dosen2]' "));
 					
-					switch($p[approve]) {
+					switch($p['approve']) {
 						case '1':
 							$status = "<small class='label bg-yellow'>Proses Persetujuan LPPM</small>";
 						break;
@@ -225,7 +225,7 @@ ob_start();
 <?php
 				$no=1;
 				while($ps=mysqli_fetch_array($qps)) {
-					$names = strtoupper($ps[name]);
+					$names = strtoupper($ps['name']);
 					$dosens1 = mysqli_fetch_array(mysqli_query($con,"SELECT name_glr FROM dosen WHERE nik='$ps[dosen1]' "));
 					$dosens2 = mysqli_fetch_array(mysqli_query($con,"SELECT name_glr FROM dosen WHERE nik='$ps[dosen2]' "));
 
@@ -292,11 +292,11 @@ ob_start();
 					<tbody>
 <?php
 				while($p=mysqli_fetch_array($qp)) {
-					$name = strtoupper($p[name]);
+					$name = strtoupper($p['name']);
 					$dosen1 = mysqli_fetch_array(mysqli_query($con,"SELECT name_glr FROM dosen WHERE nik='$p[dosen1]' "));
 					$dosen2 = mysqli_fetch_array(mysqli_query($con,"SELECT name_glr FROM dosen WHERE nik='$p[dosen2]' "));
 					
-					switch($p[approve]) {
+					switch($p['approve']) {
 						case '1':
 							$status = "<small class='label bg-yellow'>Proses Persetujuan LPPM</small>";
 						break;
@@ -370,7 +370,7 @@ ob_start();
 <?php
 				$no=1;
 				while($ps=mysqli_fetch_array($qps)) {
-					$names = strtoupper($ps[name]);
+					$names = strtoupper($ps['name']);
 					$dosens1 = mysqli_fetch_array(mysqli_query($con,"SELECT name_glr FROM dosen WHERE nik='$ps[dosen1]' "));
 					$dosens2 = mysqli_fetch_array(mysqli_query($con,"SELECT name_glr FROM dosen WHERE nik='$ps[dosen2]' "));
 

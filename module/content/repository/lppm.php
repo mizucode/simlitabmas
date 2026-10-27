@@ -28,7 +28,7 @@
 <?php
 				$no=1;
 				while($p=mysqli_fetch_array($qp)) {
-					$name = strtoupper($p[name]);
+					$name = strtoupper($p['name']);
 					$prodi = mysqli_fetch_array(mysqli_query($con,"SELECT singkatan FROM prodi WHERE kode='$p[prodi]' "));
 					$pembimbing = mysqli_fetch_array(mysqli_query($con,"SELECT name_glr FROM dosen WHERE nik='$p[pembimbing]' "));
 										

@@ -12,9 +12,9 @@ ob_start();
 	switch($folder[2]) {
 		default :
 				$qp = mysqli_query($con,"SELECT prodi.singkatan AS prodi,kelas.semester,kelas.kelas,mhs.nim,mhs.name,mhs.gender,user.hp,k.desa,k.kec,k.kota,k.size FROM mhs,prodi,kegiatan AS k,user,kelas,trakm,ta WHERE mhs.nim=k.nim AND mhs.nim=user.username AND mhs.prodi=prodi.kode AND mhs.nim=trakm.nim AND kelas.kode=trakm.paket AND trakm.ta=kelas.ta AND trakm.ta=ta.kode AND ta.active='Y' AND k.jenis='3' AND k.thn='2026' ORDER BY k.desa,kelas.prodi ");
-				$qbp = mysqli_query($con,"SELECT mhs.prodi,mhs.nim,mhs.name,prodi.singkatan,kelas.semester,kelas.kelas,user.hp FROM mhs,kelas,prodi,user,hak_akses LEFT JOIN kegiatan on(hak_akses.nim=kegiatan.nim AND kegiatan.jenis='3' AND kegiatan.thn='2026' AND kegiatan.desa!='') WHERE mhs.nim=hak_akses.nim AND mhs.prodi=prodi.kode AND kelas.kode=mhs.kelas AND kelas.ta=hak_akses.ta AND mhs.nim=user.username AND hak_akses.ta='20252' AND hak_akses.kkn='Y' AND mhs.jalur!='5' AND kegiatan.nim IS NULL ORDER BY mhs.prodi,mhs.kelas ");
+				$qbk = mysqli_query($con,"SELECT mhs.prodi,mhs.nim,mhs.name,prodi.singkatan,kelas.semester,kelas.kelas,user.hp FROM mhs,kelas,prodi,user,trakm LEFT JOIN kegiatan on(trakm.nim=kegiatan.nim AND kegiatan.jenis='3' AND kegiatan.thn='2026' AND kegiatan.desa!='') WHERE mhs.prodi=prodi.kode AND kelas.kode=mhs.kelas AND kelas.ta=trakm.ta AND mhs.nim=trakm.nim AND trakm.ta='20252' AND mhs.nim=user.username AND trakm.status='A' AND kelas.semester='6' AND mhs.prodi!='48401' AND mhs.prodi!='13462' AND mhs.jalur!='5' AND kegiatan.nim IS NULL ORDER BY mhs.prodi,mhs.kelas ");
 				
-				$qbk = mysqli_query($con,"SELECT mhs.prodi,mhs.nim,mhs.name,mhs.pindahan,prodi.singkatan,kelas.semester,kelas.kelas,user.hp,hak_akses.kkn FROM mhs,kelas,prodi,user,hak_akses,trakm WHERE mhs.nim=trakm.nim AND trakm.ta='20252' AND mhs.nim=hak_akses.nim AND mhs.prodi=prodi.kode AND kelas.kode=mhs.kelas AND kelas.ta=hak_akses.ta AND mhs.nim=user.username AND hak_akses.ta='20252' AND hak_akses.kkn!='Y' AND trakm.status='A' AND kelas.semester='6' AND mhs.prodi!='48401' AND mhs.prodi!='13462' AND mhs.jalur!='5' ORDER BY mhs.prodi,mhs.kelas ");
+//				$qbk = mysqli_query($con,"SELECT mhs.prodi,mhs.nim,mhs.name,mhs.pindahan,prodi.singkatan,kelas.semester,kelas.kelas,user.hp FROM mhs,kelas,prodi,user,trakm WHERE mhs.nim=trakm.nim AND trakm.ta='20252' AND mhs.prodi=prodi.kode AND kelas.kode=mhs.kelas AND kelas.ta=trakm.ta AND mhs.nim=user.username AND trakm.status='A' AND kelas.semester='6' AND mhs.prodi!='48401' AND mhs.prodi!='13462' AND mhs.jalur!='5' ORDER BY mhs.prodi,mhs.kelas ");
 				
 				$qkelompok = mysqli_query($con,"SELECT * FROM kuota_kel WHERE keterangan='kkn2026' GROUP BY kelompok ");
 ?>
@@ -101,10 +101,10 @@ ob_start();
 <?php
 				$no=1;
 				while($p=mysqli_fetch_array($qp)) {
-					$name = strtoupper($p[name]);
-					$desa = ucwords(strtolower($p[desa]));
-					$kec = ucwords(strtolower($p[kec]));
-					$kota = ucwords(strtolower($p[kota]));
+					$name = strtoupper($p['name']);
+					$desa = ucwords(strtolower($p['desa']));
+					$kec = ucwords(strtolower($p['kec']));
+					$kota = ucwords(strtolower($p['kota']));
 					echo"
 
 					<tr>
@@ -157,14 +157,14 @@ ob_start();
 <?php
 				$no2=1;
 				while($bp=mysqli_fetch_array($qbp)) {
-					$name2 = strtoupper($bp[name]);
+					$name2 = strtoupper($bp['name']);
 					$cek_mbkm = mysqli_num_rows(mysqli_query($con,"SELECT * FROM mbkm_kkn WHERE nim='$bp[nim]'"));
 					$cek_btq = mysqli_fetch_array(mysqli_query($con,"SELECT * FROM btq WHERE nim='$bp[nim]' "));
-					if($bp[prodi]=='83207' AND $bp[kelas]!='KRY') {
+					if($bp['prodi']=='83207' AND $bp['kelas']!='KRY') {
 						$cek_magang_dasar = '1';
 						$cek_magang_lanjutan = '1';
 					}
-					elseif($bp[prodi]=='48201') {
+					elseif($bp['prodi']=='48201') {
 						$cek_magang_dasar = '1';
 						$cek_magang_lanjutan = '1';	
 					}				
@@ -172,11 +172,11 @@ ob_start();
 						$cek_magang_dasar = mysqli_num_rows(mysqli_query($con,"SELECT mhs.nim FROM mhs,nilai,kurikulum_mk AS k,mutu_nilai AS m WHERE mhs.nim='$bp[nim]' AND mhs.nim=nilai.nim AND nilai.id_mk=k.mk AND mhs.paket_studi=k.kurikulum AND nilai.mutu=m.huruf AND m.status='Y' AND k.kode='1510G01' "));
 						$cek_magang_lanjutan = mysqli_num_rows(mysqli_query($con,"SELECT mhs.nim FROM mhs,nilai,kurikulum_mk AS k,mutu_nilai AS m WHERE mhs.nim='$bp[nim]' AND mhs.nim=nilai.nim AND nilai.id_mk=k.mk AND mhs.paket_studi=k.kurikulum AND nilai.mutu=m.huruf AND m.status='Y' AND k.kode='1510G02' "));
 					}
-					if($cek_btq[nim]!='') {
+					if($cek_btq['nim']!='') {
 						$btq = 'Sudah';
 					}
 					else {
-						if($bp[prodi]=='48201') {
+						if($bp['prodi']=='48201') {
 							$btq = 'Sudah';						
 						}
 						else {
@@ -251,14 +251,14 @@ ob_start();
 <?php
 				$no3=1;
 				while($bk=mysqli_fetch_array($qbk)) {
-					$name3 = strtoupper($bk[name]);
+					$name3 = strtoupper($bk['name']);
 					$cek_mbkm3 = mysqli_num_rows(mysqli_query($con,"SELECT * FROM mbkm_kkn WHERE nim='$bk[nim]'"));
 					$cek_btq3 = mysqli_fetch_array(mysqli_query($con,"SELECT * FROM btq WHERE nim='$bk[nim]' "));
-					if($bk[prodi]=='83207' AND $bk[kelas]!='KRY') {
+					if($bk['prodi']=='83207' AND $bk['kelas']!='KRY') {
 						$cek_magang_dasar3 = '1';
 						$cek_magang_lanjutan3 = '1';
 					}
-					elseif($bk[prodi]=='48201') {
+					elseif($bk['prodi']=='48201') {
 						$cek_magang_dasar3 = '1';
 						$cek_magang_lanjutan3 = '1';	
 					}				
@@ -266,11 +266,11 @@ ob_start();
 						$cek_magang_dasar3 = mysqli_num_rows(mysqli_query($con,"SELECT mhs.nim FROM mhs,nilai,kurikulum_mk AS k,mutu_nilai AS m WHERE mhs.nim='$bk[nim]' AND mhs.nim=nilai.nim AND nilai.id_mk=k.mk AND mhs.paket_studi=k.kurikulum AND nilai.mutu=m.huruf AND m.status='Y' AND k.kode='1510G01' "));
 						$cek_magang_lanjutan3 = mysqli_num_rows(mysqli_query($con,"SELECT mhs.nim FROM mhs,nilai,kurikulum_mk AS k,mutu_nilai AS m WHERE mhs.nim='$bk[nim]' AND mhs.nim=nilai.nim AND nilai.id_mk=k.mk AND mhs.paket_studi=k.kurikulum AND nilai.mutu=m.huruf AND m.status='Y' AND k.kode='1510G02' "));
 					}
-					if($cek_btq3[nim]!='') {
+					if($cek_btq3['nim']!='') {
 						$btq3 = 'Sudah';
 					}
 					else {
-						if($bk[prodi]=='48201') {
+						if($bk['prodi']=='48201') {
 							$btq3 = 'Sudah';						
 						}
 						else {
@@ -282,13 +282,13 @@ ob_start();
 
 					if($cek_magang_dasar3>0) { $magang_dasar3 = 'Ok'; } else { $magang_dasar3 = ''; }
 					if($cek_magang_lanjutan3>0) { $magang_lanjutan3 = 'Ok'; } else { $magang_lanjutan3 = ''; }
-					if($bk[kkn]=='Y') { $keuangan = 'Ok'; } else { $keuangan = ''; }
+					if($bk['kkn']=='Y') { $keuangan = 'Ok'; } else { $keuangan = ''; }
 
 					if($cek_mbkm3>0) {
 					
 					}
 					else {
-						if($btq3=='Sudah' AND $cek_magang_dasar3>0 AND $cek_magang_lanjutan3>0 AND $bk[kkn]=='Y') {
+						if($cek_magang_dasar3>0 AND $cek_magang_lanjutan3>0) {
 							echo"<tr class='bg-success'>";
 						}
 						else {
@@ -362,20 +362,20 @@ ob_start();
 						$chv = mysqli_fetch_array(mysqli_query($con,"SELECT COUNT(ch.id) AS j FROM catatanharian AS ch,kegiatan WHERE ch.nim=kegiatan.nim AND kegiatan.jenis='3' AND kegiatan.thn='2026' AND kegiatan.desa='$kelompok[value]' AND ch.valid='2' "));
 						$chtv = mysqli_fetch_array(mysqli_query($con,"SELECT COUNT(ch.id) AS j FROM catatanharian AS ch,kegiatan WHERE ch.nim=kegiatan.nim AND kegiatan.jenis='3' AND kegiatan.thn='2026' AND kegiatan.desa='$kelompok[value]' AND ch.valid='3' "));
 
-						if($laporan[validasi]=='') {
+						if($laporan['validasi']=='') {
 				                      $status = '<span class="btn btn-warning btn-xs">Belum Upload</span>';
 						} 
-						elseif($laporan[validasi]=='1') {
+						elseif($laporan['validasi']=='1') {
 				                      $status = '<span class="btn btn-warning btn-xs">Sedang proses validasi DPL</span>';
 						} 
-						elseif($laporan[validasi]=='2') {
+						elseif($laporan['validasi']=='2') {
 				                      $status = '<span class="btn btn-success btn-xs">Dinyatakan Valid oleh DPL</span>';
 						} 
-						elseif($laporan[validasi]=='3') {
+						elseif($laporan['validasi']=='3') {
 				                      $status = '<span class="btn btn-danger btn-xs">Tidak Valid (Silakan revisi)</span>';
 						}
 
-						if($laporan[id]!='') {
+						if($laporan['id']!='') {
 						  echo"
 							<tr>
 							<td>$kelompok[value]</td>
@@ -460,16 +460,16 @@ ob_start();
 <?php
 				$no=1;
 				while($p=mysqli_fetch_array($qp)) {
-					$name = strtoupper($p[name]);
-					$desa = ucwords(strtolower($p[desa]));
-					$kec = ucwords(strtolower($p[kec]));
-					$kota = ucwords(strtolower($p[kota]));
+					$name = strtoupper($p['name']);
+					$desa = ucwords(strtolower($p['desa']));
+					$kec = ucwords(strtolower($p['kec']));
+					$kota = ucwords(strtolower($p['kota']));
 					$qnilai = mysqli_query($con,"SELECT nilai.mutu FROM mhs,nilai,kurikulum_mk WHERE mhs.nim=nilai.nim AND nilai.id_mk=kurikulum_mk.mk AND mhs.paket_studi=kurikulum_mk.kurikulum AND kurikulum_mk.kode='1510G03' AND mhs.nim='$p[nim]' ORDER BY nilai.ta DESC LIMIT 1 ");
 					if(mysqli_num_rows($qnilai)>0) {
 						$nilai = mysqli_fetch_array($qnilai);						
 					}
 					else {
-						$nilai[mutu] = '-Tidak KRS-';
+						$nilai['mutu'] = '-Tidak KRS-';
 					}
 					echo"
 

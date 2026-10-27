@@ -6,7 +6,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['validasi_tulisan'])) {
     $status = mysqli_real_escape_string($con, $_POST['status']);
     $keterangan_validasi = mysqli_real_escape_string($con, $_POST['keterangan_validasi']);
 
-    $update = mysqli_query($con, "UPDATE penelitian_tulisan SET status='$status', keterangan_validasi='$keterangan_validasi' WHERE id='$id_tulisan'");
+    $q_judul = mysqli_query($con, "SELECT judul FROM penelitian_tulisan WHERE id='$id_tulisan'");
+    $d_judul = mysqli_fetch_assoc($q_judul);
+    $judul_esc = mysqli_real_escape_string($con, $d_judul['judul'] ?? '');
+
+    $update = mysqli_query($con, "UPDATE penelitian_tulisan SET status='$status', keterangan_validasi='$keterangan_validasi' WHERE judul='$judul_esc'");
 
     // Masukkan ke pivot tabel jika disetujui (status = 2)
     if ($status == '2') {
@@ -85,7 +89,8 @@ if (empty($folder[4])) {
                                     $selected = ($k['kode'] == @$folder[4]) ? 'selected' : '';
                                     ?>
                                     <option value='/penelitian/<?= $folder[2] ?>/validasi/<?= $k['kode'] ?>' <?= $selected ?>><?= $k['thn'] ?>     <?= $k['semester'] ?> (<?= $k['tgl_start'] ?> s.d
-                                        <?= $k['tgl_end'] ?>)</option>
+                                        <?= $k['tgl_end'] ?>)
+                                    </option>
                                     <?php
                                 }
                                 ?>
@@ -112,7 +117,7 @@ if (empty($folder[4])) {
                     <thead class="bg-white text-center align-middle">
                         <tr>
                             <th class="align-middle" style="width: 50px;">No</th>
-                            <th>Nama Dosen</th>
+                            <th>Nama</th>
                             <th>Jenis Tulisan</th>
                             <th>Judul Tulisan</th>
                             <th>Nama Media</th>
@@ -125,7 +130,7 @@ if (empty($folder[4])) {
                     <tbody>
                         <?php
                         $no = 1;
-                        $q = mysqli_query($con, "SELECT penelitian_tulisan.*, penelitian_tulisan.id AS id_tulisan, penelitian_tulisan.status AS status_validasi, dosen.name_glr FROM penelitian_tulisan LEFT JOIN dosen ON (penelitian_tulisan.nip_dosen=dosen.nik OR penelitian_tulisan.nip_dosen=dosen.nip OR penelitian_tulisan.nip_dosen=dosen.nidn) WHERE tgl_terbit>='$tgl_start' AND tgl_terbit<='$tgl_end' AND (penelitian_tulisan.status='1' OR penelitian_tulisan.status IS NULL OR penelitian_tulisan.status='') ORDER BY penelitian_tulisan.id DESC");
+                        $q = mysqli_query($con, "SELECT pt.*, pt.id AS id_tulisan, pt.status AS status_validasi, IFNULL(dosen.name_glr, mhs.name) AS name_glr FROM penelitian_tulisan pt INNER JOIN (SELECT MIN(id) as min_id FROM penelitian_tulisan WHERE tgl_terbit>='$tgl_start' AND tgl_terbit<='$tgl_end' AND (status='1' OR status IS NULL OR status='') GROUP BY judul) p2 ON pt.id = p2.min_id LEFT JOIN dosen ON (pt.nip_dosen=dosen.nik OR pt.nip_dosen=dosen.nip OR pt.nip_dosen=dosen.nidn) LEFT JOIN mhs ON pt.nip_dosen=mhs.nim ORDER BY pt.id DESC");
 
                         if (mysqli_num_rows($q) > 0) {
                             while ($r = mysqli_fetch_array($q)) {
@@ -178,7 +183,8 @@ if (empty($folder[4])) {
                                     <td class="align-middle text-center">
                                         <span class="badge <?= $badge_class ?> p-2"><?= $status_text ?></span>
                                         <?php if (!empty($r['keterangan_validasi'])) { ?>
-                                            <br><small class="text-muted text-wrap" style="max-width: 200px; display: inline-block; margin-top: 5px;"><?= htmlspecialchars($r['keterangan_validasi']) ?></small>
+                                            <br><small class="text-muted text-wrap"
+                                                style="max-width: 200px; display: inline-block; margin-top: 5px;"><?= htmlspecialchars($r['keterangan_validasi']) ?></small>
                                         <?php } ?>
                                     </td>
                                     <td class="text-center align-middle">
@@ -202,7 +208,8 @@ if (empty($folder[4])) {
                                                         </div>
                                                         <div class="modal-body">
                                                             <input type="hidden" name="validasi_tulisan" value="1">
-                                                            <input type="hidden" name="id_tulisan" value="<?= $r['id_tulisan'] ?>">
+                                                            <input type="hidden" name="id_tulisan"
+                                                                value="<?= $r['id_tulisan'] ?>">
 
                                                             <div class="form-group">
                                                                 <label>Status Validasi</label>
@@ -225,7 +232,8 @@ if (empty($folder[4])) {
                                                             </div>
 
                                                             <hr>
-                                                            <h6 class="font-weight-bold text-primary mb-2">Detail Tulisan di Media</h6>
+                                                            <h6 class="font-weight-bold text-primary mb-2">Detail Tulisan di
+                                                                Media</h6>
                                                             <div class="p-3 border rounded shadow-sm"
                                                                 style="max-height: 45vh; overflow-y: auto; background-color: #f8f9fc;">
                                                                 <div class="table-responsive">
@@ -234,11 +242,15 @@ if (empty($folder[4])) {
                                                                         style="font-size: 0.9rem; table-layout: fixed; word-wrap: break-word;">
                                                                         <tr>
                                                                             <th style="width: 35%">Dosen</th>
-                                                                            <td style="width: 65%">: <?= htmlspecialchars($nama_dosen) ?></td>
+                                                                            <td style="width: 65%">:
+                                                                                <?= htmlspecialchars($nama_dosen) ?>
+                                                                            </td>
                                                                         </tr>
                                                                         <tr>
                                                                             <th>Jenis</th>
-                                                                            <td>: <?= htmlspecialchars($id_jenis['desc'] ?? '-') ?></td>
+                                                                            <td>:
+                                                                                <?= htmlspecialchars($id_jenis['desc'] ?? '-') ?>
+                                                                            </td>
                                                                         </tr>
                                                                         <tr>
                                                                             <th>Judul Tulisan</th>
@@ -246,21 +258,31 @@ if (empty($folder[4])) {
                                                                         </tr>
                                                                         <tr>
                                                                             <th>Nama Media</th>
-                                                                            <td>: <?= htmlspecialchars($r['media'] ?? '-') ?></td>
+                                                                            <td>: <?= htmlspecialchars($r['media'] ?? '-') ?>
+                                                                            </td>
                                                                         </tr>
                                                                         <tr>
                                                                             <th>Tingkat</th>
-                                                                            <td>: <?= htmlspecialchars($id_level['desc'] ?? '-') ?></td>
+                                                                            <td>:
+                                                                                <?= htmlspecialchars($id_level['desc'] ?? '-') ?>
+                                                                            </td>
                                                                         </tr>
                                                                         <tr>
                                                                             <th>Tanggal Terbit</th>
-                                                                            <td>: <?= htmlspecialchars(empty($r['tgl_terbit']) ? '-' : $r['tgl_terbit']) ?></td>
+                                                                            <td>:
+                                                                                <?= htmlspecialchars(empty($r['tgl_terbit']) ? '-' : $r['tgl_terbit']) ?>
+                                                                            </td>
                                                                         </tr>
                                                                         <tr>
                                                                             <th>URL / Link</th>
                                                                             <td>: <?php if (!empty($r['link'])) { ?>
-                                                                                    <a href="<?= htmlspecialchars($r['link']) ?>" target="_blank" class="text-primary"><i class="fas fa-external-link-alt"></i> Buka Link</a>
-                                                                                <?php } else { echo '-'; } ?>
+                                                                                    <a href="<?= htmlspecialchars($r['link']) ?>"
+                                                                                        target="_blank" class="text-primary"><i
+                                                                                            class="fas fa-external-link-alt"></i>
+                                                                                        Buka Link</a>
+                                                                                <?php } else {
+                                                                                echo '-';
+                                                                            } ?>
                                                                             </td>
                                                                         </tr>
                                                                         <tr>
@@ -316,7 +338,7 @@ if (empty($folder[4])) {
                     <thead class="bg-white text-center align-middle">
                         <tr>
                             <th class="align-middle" style="width: 50px;">No</th>
-                            <th>Nama Dosen</th>
+                            <th>Nama</th>
                             <th>Jenis Tulisan</th>
                             <th>Judul Tulisan</th>
                             <th>Nama Media</th>
@@ -328,7 +350,7 @@ if (empty($folder[4])) {
                     <tbody>
                         <?php
                         $no = 1;
-                        $q_ditolak = mysqli_query($con, "SELECT penelitian_tulisan.*, penelitian_tulisan.id AS id_tulisan, penelitian_tulisan.status AS status_validasi, dosen.name_glr FROM penelitian_tulisan LEFT JOIN dosen ON (penelitian_tulisan.nip_dosen=dosen.nik OR penelitian_tulisan.nip_dosen=dosen.nip OR penelitian_tulisan.nip_dosen=dosen.nidn) WHERE tgl_terbit>='$tgl_start' AND tgl_terbit<='$tgl_end' AND penelitian_tulisan.status='3' ORDER BY penelitian_tulisan.id DESC");
+                        $q_ditolak = mysqli_query($con, "SELECT penelitian_tulisan.*, penelitian_tulisan.id AS id_tulisan, penelitian_tulisan.status AS status_validasi, IFNULL(dosen.name_glr, mhs.name) AS name_glr FROM penelitian_tulisan LEFT JOIN dosen ON (penelitian_tulisan.nip_dosen=dosen.nik OR penelitian_tulisan.nip_dosen=dosen.nip OR penelitian_tulisan.nip_dosen=dosen.nidn) LEFT JOIN mhs ON penelitian_tulisan.nip_dosen=mhs.nim WHERE tgl_terbit>='$tgl_start' AND tgl_terbit<='$tgl_end' AND penelitian_tulisan.status='3' ORDER BY penelitian_tulisan.id DESC");
 
                         if (mysqli_num_rows($q_ditolak) > 0) {
                             while ($r = mysqli_fetch_array($q_ditolak)) {

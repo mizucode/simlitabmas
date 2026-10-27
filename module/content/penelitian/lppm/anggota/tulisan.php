@@ -132,8 +132,9 @@ if (!$porto) {
             <thead class="bg-white text-center align-middle">
               <tr>
                 <th class="align-middle" style="width: 50px;">No</th>
-                <th class="align-middle">NIK</th>
-                <th class="align-middle">Nama Dosen & Gelar</th>
+                <th class="align-middle">NIK/NIM</th>
+                <th class="align-middle">Nama</th>
+                <th class="align-middle">Status</th>
                 <th class="align-middle">Jenis File</th>
                 <th class="align-middle">Tanggal Regis</th>
                 <th class="text-center align-middle" style="width: 80px;">Aksi</th>
@@ -143,7 +144,7 @@ if (!$porto) {
               <?php
               $judul_porto_esc = mysqli_real_escape_string($con, $porto['judul']);
               $q_regis = mysqli_query($con, "
-                  SELECT r.*, d.name_glr, d.name, k2.`desc` as file_desc,
+                  SELECT r.*, d.name_glr, d.name, m.name as name_mhs, k2.`desc` as file_desc,
                          (SELECT url FROM file_dosen 
                           WHERE nip_dosen = r.nik AND kelompok = 'file_tulisan' 
                           AND (id_cat = r.id_porto OR id_cat IN (SELECT id FROM penelitian_tulisan WHERE nip_dosen = r.nik AND (judul = '$judul_porto_esc' OR id = r.id_porto)))
@@ -154,6 +155,7 @@ if (!$porto) {
                           ORDER BY id DESC LIMIT 1) as value_kode
                   FROM regis_dosen_penelitian r 
                   LEFT JOIN dosen d ON r.nik = d.nik 
+                  LEFT JOIN mhs m ON r.nik = m.nim
                   LEFT JOIN kode k2 ON (
                       SELECT value_kode FROM file_dosen 
                       WHERE nip_dosen = r.nik AND kelompok = 'file_tulisan' 
@@ -169,11 +171,18 @@ if (!$porto) {
                 while ($row = mysqli_fetch_array($q_regis)) {
                   $type_text = !empty($row['file_desc']) ? $row['file_desc'] : (!empty($row['value_kode']) ? $row['value_kode'] : '-');
                   $prodi_str = "";
+                  
+                  $is_dosen = !empty($row['name_glr']);
+                  $nama_display = $is_dosen ? $row['name_glr'] : $row['name_mhs'];
+                  $jenis_anggota = $is_dosen ? "Dosen" : "Mahasiswa";
                   ?>
                   <tr>
                     <td class="text-center align-middle"><?= $no ?></td>
                     <td class="align-middle"><?= $row['nik'] ?></td>
-                    <td class="align-middle"><span class="text-dark"><?= $row['name_glr'] ?></span><?= $prodi_str ?></td>
+                    <td class="align-middle"><span class="text-dark"><?= $nama_display ?></span><?= $prodi_str ?></td>
+                    <td class="align-middle text-center">
+                      <span class="badge badge-<?= $is_dosen ? 'info' : 'success' ?> p-1 px-2"><?= $jenis_anggota ?></span>
+                    </td>
                     <td class="align-middle text-center">
                       <?php if (!empty($row['url_file'])): ?>
                         <a href="<?= @$storage_url . $row['url_file'] ?>" target="_blank" class="btn btn-xs btn-primary">
@@ -317,7 +326,7 @@ if (!$porto) {
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h4 class="modal-title">Tambah Anggota Dosen</h4>
+        <h4 class="modal-title">Tambah Anggota Dosen / Mahasiswa</h4>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
@@ -326,13 +335,13 @@ if (!$porto) {
         <form action="/insert/penelitian/anggota_tulisan" method="POST" enctype="multipart/form-data">
           <input type="hidden" name="id_porto" value="<?= $id_porto ?>">
           <div class="form-group">
-            <label>Pilih Dosen <span class="text-danger">*</span></label>
+            <label>Pilih Dosen / Mahasiswa <span class="text-danger">*</span></label>
             <select class="form-control select2bs4" name="nik" required style="width: 100%;">
-              <option value="">-- Cari Nama/NIK Dosen --</option>
+              <option value="">-- Cari Nama/NIK/NIM --</option>
               <?php
-              $qdosen = mysqli_query($con, "SELECT nik, name_glr FROM dosen ORDER BY name");
+              $qdosen = mysqli_query($con, "SELECT nik, name_glr, 'Dosen' AS tipe FROM dosen UNION SELECT nim AS nik, name AS name_glr, 'Mahasiswa' AS tipe FROM mhs ORDER BY name_glr");
               while ($d = mysqli_fetch_array($qdosen)) {
-                echo "<option value='{$d['nik']}'>{$d['name_glr']} ({$d['nik']})</option>";
+                echo "<option value='{$d['nik']}'>{$d['name_glr']} ({$d['nik']} - {$d['tipe']})</option>";
               }
               ?>
             </select>

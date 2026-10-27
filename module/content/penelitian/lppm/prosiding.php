@@ -49,7 +49,7 @@ if (empty($_SESSION['ses_user']) AND empty($_SESSION['ses_pass']) AND empty($_SE
 							<h3 class="card-title">Artikel Prosiding</h3>
 							<div class="card-tools">
 								<?php
-								$q_pending = mysqli_query($con, "SELECT COUNT(*) as jml FROM penelitian_prosiding WHERE (status='1' OR status IS NULL OR status='') AND tgl_terbit>='$tgl_start' AND tgl_terbit<='$tgl_end'");
+								$q_pending = mysqli_query($con, "SELECT COUNT(DISTINCT judul) as jml FROM penelitian_prosiding WHERE (status='1' OR status IS NULL OR status='') AND tgl_terbit>='$tgl_start' AND tgl_terbit<='$tgl_end'");
 								$r_pending = mysqli_fetch_assoc($q_pending);
 								$jml_pending = $r_pending['jml'];
 								?>
@@ -81,7 +81,7 @@ if (empty($_SESSION['ses_user']) AND empty($_SESSION['ses_pass']) AND empty($_SE
 								<tbody>
 									<?php
 									$no = 1;
-									$q = mysqli_query($con, "SELECT *, penelitian_prosiding.id AS id_prosiding FROM penelitian_prosiding,dosen WHERE penelitian_prosiding.nip_dosen=dosen.nik AND penelitian_prosiding.status='2' AND tgl_terbit>='$tgl_start' AND tgl_terbit<='$tgl_end' ORDER BY dosen.nik ");
+									$q = mysqli_query($con, "SELECT p1.*, p1.id AS id_prosiding, IFNULL(dosen.name_glr, mhs.name) AS name_glr FROM penelitian_prosiding p1 INNER JOIN (SELECT MIN(id) as min_id FROM penelitian_prosiding WHERE status='2' AND tgl_terbit>='$tgl_start' AND tgl_terbit<='$tgl_end' GROUP BY judul) p2 ON p1.id = p2.min_id LEFT JOIN dosen ON p1.nip_dosen=dosen.nik LEFT JOIN mhs ON p1.nip_dosen=mhs.nim ORDER BY p1.id DESC");
 									if (mysqli_num_rows($q) > 0) {
 										while ($r = mysqli_fetch_array($q)) {
 											$id_jenis = mysqli_fetch_array(mysqli_query($con, "SELECT * FROM kode WHERE value='{$r['id_jenis']}' AND kelompok='jenis_prosiding' LIMIT 1"));
@@ -95,7 +95,7 @@ if (empty($_SESSION['ses_user']) AND empty($_SESSION['ses_pass']) AND empty($_SE
 												<td class="align-middle text-center">
 													<a href="/penelitian/prosiding/anggota/<?= $r['id_prosiding'] ?>" class="badge badge-info p-2 px-3"
 														style="font-size: 0.9rem;">
-														<i class="fas fa-users mr-1"></i> <?= $jml_dosen ?> Dosen
+														<i class="fas fa-users mr-1"></i> <?= $jml_dosen ?> Anggota
 													</a>
 												</td>
 												<td class="align-middle">
@@ -114,12 +114,14 @@ if (empty($_SESSION['ses_user']) AND empty($_SESSION['ses_pass']) AND empty($_SE
 												</td>
 												<td class="align-middle text-center">
 													<?php
+													$judul_esc = mysqli_real_escape_string($con, $r['judul']);
 													$qfile_pivot = mysqli_query($con, "
-										SELECT f.url as url_file, kode.desc as type_file, d.name_glr
+										SELECT f.url as url_file, kode.desc as type_file, IFNULL(d.name_glr, m.name) AS name_glr
 										FROM file_dosen f
 										LEFT JOIN dosen d ON f.nip_dosen = d.nik
+										LEFT JOIN mhs m ON f.nip_dosen = m.nim
 										LEFT JOIN kode ON f.value_kode = kode.value AND kode.kelompok = 'file_prosiding'
-										WHERE f.id_cat = '{$r['id_prosiding']}' AND f.kelompok = 'file_prosiding'
+										WHERE f.id_cat IN (SELECT id FROM penelitian_prosiding WHERE judul='$judul_esc') AND f.kelompok = 'file_prosiding'
 									");
 
 													$jml_file = mysqli_num_rows($qfile_pivot);

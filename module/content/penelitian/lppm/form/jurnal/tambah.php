@@ -11,16 +11,16 @@
 									<form role="form" enctype="multipart/form-data" method="post" action="/insert/penelitian/jurnal">
 										<div class="form-group">
 											<p>
-											<label>Dosen Peneliti<span class="text-danger"> *</span></label>
+											<label>Dosen Peneliti / Mahasiswa<span class="text-danger"> *</span></label>
 											<select class='form-control select2bs4' name='nip_dosen' required style="width: 100%;">
-												<option value=''>-- Pilih Dosen --</option>
+												<option value=''>-- Cari Nama/NIK/NIM --</option>
 												<?php
 													try {
-														$qdosen = mysqli_query($con,"SELECT nik, name_glr FROM dosen ORDER BY name");
+														$qdosen = mysqli_query($con,"SELECT nik, name_glr, 'Dosen' AS tipe FROM dosen UNION SELECT nim AS nik, name AS name_glr, 'Mahasiswa' AS tipe FROM mhs ORDER BY name_glr");
 														if ($qdosen) {
 															while($dosen=mysqli_fetch_array($qdosen)) {
 																?>
-																	<option value='<?= $dosen['nik'] ?>'><?= $dosen['nik'] ?> - <?= $dosen['name_glr'] ?></option>
+																	<option value='<?= $dosen['nik'] ?>'><?= $dosen['name_glr'] ?> (<?= $dosen['nik'] ?> - <?= $dosen['tipe'] ?>)</option>
 																<?php
 															}
 														}

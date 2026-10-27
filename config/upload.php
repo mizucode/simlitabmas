@@ -287,9 +287,152 @@ function UploadProsiding($fupload_name)
 }
 function UploadPengabdian($fupload_name)
 {
-	$vdir_upload = "file/pengabdian/";
-	$vfile_upload = $vdir_upload . $fupload_name;
-	move_uploaded_file($_FILES["file"]["tmp_name"], $vfile_upload);
+	$api_key = '2peFfBV5hYLzdGnf7W3koVFG';
+	$gateway = 'https://file.umkuningan.ac.id/upload_file';
+
+	$lokasi_tmp = $_FILES['file']['tmp_name'];
+	$mime_type = $_FILES['file']['type'];
+
+	$s3_url = $gateway . '?key=' . urlencode($api_key);
+
+	$curl = curl_init();
+	$cfile = curl_file_create($lokasi_tmp, $mime_type, $fupload_name);
+
+	$postFields = [
+		'file' => $cfile,
+		'key' => $api_key,
+	];
+
+	curl_setopt_array($curl, [
+		CURLOPT_URL => $s3_url,
+		CURLOPT_POST => true,
+		CURLOPT_POSTFIELDS => $postFields,
+		CURLOPT_RETURNTRANSFER => true,
+		CURLOPT_HTTPHEADER => ['Accept: application/json'],
+		CURLOPT_SSL_VERIFYPEER => false,
+		CURLOPT_SSL_VERIFYHOST => 0,
+		CURLOPT_TIMEOUT => 60,
+		CURLOPT_SAFE_UPLOAD => true,
+	]);
+
+	$response = curl_exec($curl);
+	$curl_err = curl_error($curl);
+	$http_code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+	curl_close($curl);
+
+	if ($curl_err) {
+		error_log("Gateway cURL Error: " . $curl_err);
+		return false;
+	}
+
+	$result = json_decode($response, true);
+	if ($http_code === 200 && !empty($result['success'])) {
+		return true;
+	} else {
+		$pesan = $result['message'] ?? 'Unknown error';
+		error_log("Gateway Upload Error (HTTP {$http_code}): {$pesan}");
+		return false;
+	}
+}
+
+function UploadPembicara($fupload_name)
+{
+	$api_key = 'f6orPW34nmr85vxhsXZqDP3u';
+	$gateway = 'https://file.umkuningan.ac.id/upload_file';
+
+	$lokasi_tmp = $_FILES['file']['tmp_name'];
+	$mime_type = $_FILES['file']['type'];
+
+	$s3_url = $gateway . '?key=' . urlencode($api_key);
+
+	$curl = curl_init();
+	$cfile = curl_file_create($lokasi_tmp, $mime_type, $fupload_name);
+
+	$postFields = [
+		'file' => $cfile,
+		'key' => $api_key,
+	];
+
+	curl_setopt_array($curl, [
+		CURLOPT_URL => $s3_url,
+		CURLOPT_POST => true,
+		CURLOPT_POSTFIELDS => $postFields,
+		CURLOPT_RETURNTRANSFER => true,
+		CURLOPT_HTTPHEADER => ['Accept: application/json'],
+		CURLOPT_SSL_VERIFYPEER => false,
+		CURLOPT_SSL_VERIFYHOST => 0,
+		CURLOPT_TIMEOUT => 60,
+		CURLOPT_SAFE_UPLOAD => true,
+	]);
+
+	$response = curl_exec($curl);
+	$curl_err = curl_error($curl);
+	$http_code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+	curl_close($curl);
+
+	if ($curl_err) {
+		error_log("Gateway cURL Error: " . $curl_err);
+		return false;
+	}
+
+	$result = json_decode($response, true);
+	if ($http_code === 200 && !empty($result['success'])) {
+		return true;
+	} else {
+		$pesan = $result['message'] ?? 'Unknown error';
+		error_log("Gateway Upload Error (HTTP {$http_code}): {$pesan}");
+		return false;
+	}
+}
+
+function UploadJabatan($fupload_name)
+{
+	$api_key = 'AddWs7VCSXDC9GBFKTptyCwD';
+	$gateway = 'https://file.umkuningan.ac.id/upload_file';
+
+	$lokasi_tmp = $_FILES['file']['tmp_name'];
+	$mime_type = $_FILES['file']['type'];
+
+	$s3_url = $gateway . '?key=' . urlencode($api_key);
+
+	$curl = curl_init();
+	$cfile = curl_file_create($lokasi_tmp, $mime_type, $fupload_name);
+
+	$postFields = [
+		'file' => $cfile,
+		'key' => $api_key,
+	];
+
+	curl_setopt_array($curl, [
+		CURLOPT_URL => $s3_url,
+		CURLOPT_POST => true,
+		CURLOPT_POSTFIELDS => $postFields,
+		CURLOPT_RETURNTRANSFER => true,
+		CURLOPT_HTTPHEADER => ['Accept: application/json'],
+		CURLOPT_SSL_VERIFYPEER => false,
+		CURLOPT_SSL_VERIFYHOST => 0,
+		CURLOPT_TIMEOUT => 60,
+		CURLOPT_SAFE_UPLOAD => true,
+	]);
+
+	$response = curl_exec($curl);
+	$curl_err = curl_error($curl);
+	$http_code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+	curl_close($curl);
+
+	if ($curl_err) {
+		error_log("Gateway cURL Error: " . $curl_err);
+		return false;
+	}
+
+	$result = json_decode($response, true);
+	if ($http_code === 200 && !empty($result['success'])) {
+		return true;
+	} else {
+		$pesan = $result['message'] ?? 'Unknown error';
+		error_log("Gateway Upload Error (HTTP {$http_code}): {$pesan}");
+		return false;
+	}
 }
 function UploadPenunjang($fupload_name)
 {
@@ -446,4 +589,302 @@ function UploadTulisan($fupload_name)
 		return false;
 	}
 }
+
+function UploadMonograf($fupload_name)
+{
+	$api_key = '2TF5Qr4bUoLdvswqsRY4Z936';
+	$gateway = 'https://file.umkuningan.ac.id/upload_file';
+
+	$lokasi_tmp = $_FILES['file']['tmp_name'];
+	$mime_type = $_FILES['file']['type'];
+
+	$s3_url = $gateway . '?key=' . urlencode($api_key);
+
+	$curl = curl_init();
+	$cfile = curl_file_create($lokasi_tmp, $mime_type, $fupload_name);
+
+	$postFields = [
+		'file' => $cfile,
+		'key' => $api_key,
+	];
+
+	curl_setopt_array($curl, [
+		CURLOPT_URL => $s3_url,
+		CURLOPT_POST => true,
+		CURLOPT_POSTFIELDS => $postFields,
+		CURLOPT_RETURNTRANSFER => true,
+		CURLOPT_HTTPHEADER => ['Accept: application/json'],
+		CURLOPT_SSL_VERIFYPEER => false,
+		CURLOPT_SSL_VERIFYHOST => 0,
+		CURLOPT_TIMEOUT => 60,
+		CURLOPT_SAFE_UPLOAD => true,
+	]);
+
+	$response = curl_exec($curl);
+	$curl_err = curl_error($curl);
+	$http_code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+	curl_close($curl);
+
+	if ($curl_err) {
+		error_log("Gateway cURL Error: " . $curl_err);
+		return false;
+	}
+
+	$result = json_decode($response, true);
+	if ($http_code === 200 && !empty($result['success'])) {
+		return true;
+	} else {
+		$pesan = $result['message'] ?? 'Unknown error';
+		error_log("Gateway Upload Error (HTTP {$http_code}): {$pesan}");
+		return false;
+	}
+}
+
+function UploadPenerjemahan($fupload_name)
+{
+	$api_key = 'FrkxvmuwcgCHtkcyEGJuAc6T';
+	$gateway = 'https://file.umkuningan.ac.id/upload_file';
+
+	$lokasi_tmp = $_FILES['file']['tmp_name'];
+	$mime_type = $_FILES['file']['type'];
+
+	$s3_url = $gateway . '?key=' . urlencode($api_key);
+
+	$curl = curl_init();
+	$cfile = curl_file_create($lokasi_tmp, $mime_type, $fupload_name);
+
+	$postFields = [
+		'file' => $cfile,
+		'key' => $api_key,
+	];
+
+	curl_setopt_array($curl, [
+		CURLOPT_URL => $s3_url,
+		CURLOPT_POST => true,
+		CURLOPT_POSTFIELDS => $postFields,
+		CURLOPT_RETURNTRANSFER => true,
+		CURLOPT_HTTPHEADER => ['Accept: application/json'],
+		CURLOPT_SSL_VERIFYPEER => false,
+		CURLOPT_SSL_VERIFYHOST => 0,
+		CURLOPT_TIMEOUT => 60,
+		CURLOPT_SAFE_UPLOAD => true,
+	]);
+
+	$response = curl_exec($curl);
+	$curl_err = curl_error($curl);
+	$http_code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+	curl_close($curl);
+
+	if ($curl_err) {
+		error_log("Gateway cURL Error: " . $curl_err);
+		return false;
+	}
+
+	$result = json_decode($response, true);
+	if ($http_code === 200 && !empty($result['success'])) {
+		return true;
+	} else {
+		$pesan = $result['message'] ?? 'Unknown error';
+		error_log("Gateway Upload Error (HTTP {$http_code}): {$pesan}");
+		return false;
+	}
+}
+function UploadPenyuntingan($fupload_name)
+{
+	$api_key = 'FrkxvmuwcgCHtkcyEGJuAc6T';
+	$gateway = 'https://file.umkuningan.ac.id/upload_file';
+
+	$lokasi_tmp = $_FILES['file']['tmp_name'];
+	$mime_type = $_FILES['file']['type'];
+
+	$s3_url = $gateway . '?key=' . urlencode($api_key);
+
+	$curl = curl_init();
+	$cfile = curl_file_create($lokasi_tmp, $mime_type, $fupload_name);
+
+	$postFields = [
+		'file' => $cfile,
+		'key' => $api_key,
+	];
+
+	curl_setopt_array($curl, [
+		CURLOPT_URL => $s3_url,
+		CURLOPT_POST => true,
+		CURLOPT_POSTFIELDS => $postFields,
+		CURLOPT_RETURNTRANSFER => true,
+		CURLOPT_HTTPHEADER => ['Accept: application/json'],
+		CURLOPT_SSL_VERIFYPEER => false,
+		CURLOPT_SSL_VERIFYHOST => 0,
+		CURLOPT_TIMEOUT => 60,
+		CURLOPT_SAFE_UPLOAD => true,
+	]);
+
+	$response = curl_exec($curl);
+	$curl_err = curl_error($curl);
+	$http_code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+	curl_close($curl);
+
+	if ($curl_err) {
+		error_log("Gateway cURL Error: " . $curl_err);
+		return false;
+	}
+
+	$result = json_decode($response, true);
+	if ($http_code === 200 && !empty($result['success'])) {
+		return true;
+	} else {
+		$pesan = $result['message'] ?? 'Unknown error';
+		error_log("Gateway Upload Error (HTTP {$http_code}): {$pesan}");
+		return false;
+	}
+}
+function UploadNonPublikasi($fupload_name)
+{
+	$api_key = 'gCbNm39phNXPqbHTEEcP6NoK';
+	$gateway = 'https://file.umkuningan.ac.id/upload_file';
+
+	$lokasi_tmp = $_FILES['file']['tmp_name'];
+	$mime_type = $_FILES['file']['type'];
+
+	$s3_url = $gateway . '?key=' . urlencode($api_key);
+
+	$curl = curl_init();
+	$cfile = curl_file_create($lokasi_tmp, $mime_type, $fupload_name);
+
+	$postFields = [
+		'file' => $cfile,
+		'key' => $api_key,
+	];
+
+	curl_setopt_array($curl, [
+		CURLOPT_URL => $s3_url,
+		CURLOPT_POST => true,
+		CURLOPT_POSTFIELDS => $postFields,
+		CURLOPT_RETURNTRANSFER => true,
+		CURLOPT_HTTPHEADER => ['Accept: application/json'],
+		CURLOPT_SSL_VERIFYPEER => false,
+		CURLOPT_SSL_VERIFYHOST => 0,
+		CURLOPT_TIMEOUT => 60,
+		CURLOPT_SAFE_UPLOAD => true,
+	]);
+
+	$response = curl_exec($curl);
+	$curl_err = curl_error($curl);
+	$http_code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+	curl_close($curl);
+
+	if ($curl_err) {
+		error_log("Gateway cURL Error: " . $curl_err);
+		return false;
+	}
+
+	$result = json_decode($response, true);
+	if ($http_code === 200 && !empty($result['success'])) {
+		return true;
+	} else {
+		$pesan = $result['message'] ?? 'Unknown error';
+		error_log("Gateway Upload Error (HTTP {$http_code}): {$pesan}");
+		return false;
+	}
+}
+function UploadReferensiJurnal($fupload_name)
+{
+	$api_key = 'JLHm3ShNL4CVJsn4bTYdGvLy';
+	$gateway = 'https://file.umkuningan.ac.id/upload_file';
+
+	$lokasi_tmp = $_FILES['file']['tmp_name'];
+	$mime_type = $_FILES['file']['type'];
+
+	$s3_url = $gateway . '?key=' . urlencode($api_key);
+
+	$curl = curl_init();
+	$cfile = curl_file_create($lokasi_tmp, $mime_type, $fupload_name);
+
+	$postFields = [
+		'file' => $cfile,
+		'key' => $api_key,
+	];
+
+	curl_setopt_array($curl, [
+		CURLOPT_URL => $s3_url,
+		CURLOPT_POST => true,
+		CURLOPT_POSTFIELDS => $postFields,
+		CURLOPT_RETURNTRANSFER => true,
+		CURLOPT_HTTPHEADER => ['Accept: application/json'],
+		CURLOPT_SSL_VERIFYPEER => false,
+		CURLOPT_SSL_VERIFYHOST => 0,
+		CURLOPT_TIMEOUT => 60,
+		CURLOPT_SAFE_UPLOAD => true,
+	]);
+
+	$response = curl_exec($curl);
+	$curl_err = curl_error($curl);
+	$http_code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+	curl_close($curl);
+
+	if ($curl_err) {
+		error_log("Gateway cURL Error: " . $curl_err);
+		return false;
+	}
+
+	$result = json_decode($response, true);
+	if ($http_code === 200 && !empty($result['success'])) {
+		return true;
+	} else {
+		$pesan = $result['message'] ?? 'Unknown error';
+		error_log("Gateway Upload Error (HTTP {$http_code}): {$pesan}");
+		return false;
+	}
+}
+function UploadReferensiKlaster($fupload_name)
+{
+	$api_key = 'D8L57dbmKFAdoiVG5TyGLgUG';
+	$gateway = 'https://file.umkuningan.ac.id/upload_file';
+
+	$lokasi_tmp = $_FILES['file']['tmp_name'];
+	$mime_type = $_FILES['file']['type'];
+
+	$s3_url = $gateway . '?key=' . urlencode($api_key);
+
+	$curl = curl_init();
+	$cfile = curl_file_create($lokasi_tmp, $mime_type, $fupload_name);
+
+	$postFields = [
+		'file' => $cfile,
+		'key' => $api_key,
+	];
+
+	curl_setopt_array($curl, [
+		CURLOPT_URL => $s3_url,
+		CURLOPT_POST => true,
+		CURLOPT_POSTFIELDS => $postFields,
+		CURLOPT_RETURNTRANSFER => true,
+		CURLOPT_HTTPHEADER => ['Accept: application/json'],
+		CURLOPT_SSL_VERIFYPEER => false,
+		CURLOPT_SSL_VERIFYHOST => 0,
+		CURLOPT_TIMEOUT => 60,
+		CURLOPT_SAFE_UPLOAD => true,
+	]);
+
+	$response = curl_exec($curl);
+	$curl_err = curl_error($curl);
+	$http_code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+	curl_close($curl);
+
+	if ($curl_err) {
+		error_log("Gateway cURL Error: " . $curl_err);
+		return false;
+	}
+
+	$result = json_decode($response, true);
+	if ($http_code === 200 && !empty($result['success'])) {
+		return true;
+	} else {
+		$pesan = $result['message'] ?? 'Unknown error';
+		error_log("Gateway Upload Error (HTTP {$http_code}): {$pesan}");
+		return false;
+	}
+}
+
+
 ?>

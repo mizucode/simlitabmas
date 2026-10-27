@@ -6,7 +6,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['validasi_jurnal'])) {
     $status = mysqli_real_escape_string($con, $_POST['status']);
     $keterangan_validasi = mysqli_real_escape_string($con, $_POST['keterangan_validasi']);
 
-    $update = mysqli_query($con, "UPDATE penelitian_jurnal SET status='$status', keterangan_validasi='$keterangan_validasi' WHERE id='$id_jurnal'");
+    $q_judul = mysqli_query($con, "SELECT judul FROM penelitian_jurnal WHERE id='$id_jurnal'");
+    $d_judul = mysqli_fetch_assoc($q_judul);
+    $judul_esc = mysqli_real_escape_string($con, $d_judul['judul'] ?? '');
+
+    $update = mysqli_query($con, "UPDATE penelitian_jurnal SET status='$status', keterangan_validasi='$keterangan_validasi' WHERE judul='$judul_esc'");
     
     // Masukkan ke pivot tabel jika disetujui (status = 2)
     if ($status == '2') {
@@ -117,7 +121,7 @@ if (empty($folder[4])) {
                     <tbody>
                         <?php
                         $no = 1;
-                        $q = mysqli_query($con, "SELECT *, penelitian_jurnal.id AS id_jurnal, penelitian_jurnal.status AS status_validasi FROM penelitian_jurnal, dosen WHERE penelitian_jurnal.nip_dosen=dosen.nik AND tgl_terbit>='$tgl_start' AND tgl_terbit<='$tgl_end' AND (penelitian_jurnal.status='1' OR penelitian_jurnal.status IS NULL OR penelitian_jurnal.status='') ORDER BY penelitian_jurnal.id DESC");
+                        $q = mysqli_query($con, "SELECT pj.*, pj.id AS id_jurnal, pj.status AS status_validasi, IFNULL(dosen.name_glr, mhs.name) AS name_glr FROM penelitian_jurnal pj INNER JOIN (SELECT MIN(id) as min_id FROM penelitian_jurnal WHERE tgl_terbit>='$tgl_start' AND tgl_terbit<='$tgl_end' AND (status='1' OR status IS NULL OR status='') GROUP BY judul) p2 ON pj.id = p2.min_id LEFT JOIN dosen ON pj.nip_dosen=dosen.nik LEFT JOIN mhs ON pj.nip_dosen=mhs.nim ORDER BY pj.id DESC");
                         
                         if (mysqli_num_rows($q) > 0) {
                             while ($r = mysqli_fetch_array($q)) {
@@ -278,7 +282,7 @@ if (empty($folder[4])) {
                     <tbody>
                         <?php
                         $no = 1;
-                        $q_ditolak = mysqli_query($con, "SELECT *, penelitian_jurnal.id AS id_jurnal, penelitian_jurnal.status AS status_validasi FROM penelitian_jurnal, dosen WHERE penelitian_jurnal.nip_dosen=dosen.nik AND tgl_terbit>='$tgl_start' AND tgl_terbit<='$tgl_end' AND penelitian_jurnal.status='3' ORDER BY penelitian_jurnal.id DESC");
+                        $q_ditolak = mysqli_query($con, "SELECT penelitian_jurnal.*, penelitian_jurnal.id AS id_jurnal, penelitian_jurnal.status AS status_validasi, IFNULL(dosen.name_glr, mhs.name) AS name_glr FROM penelitian_jurnal LEFT JOIN dosen ON penelitian_jurnal.nip_dosen=dosen.nik LEFT JOIN mhs ON penelitian_jurnal.nip_dosen=mhs.nim WHERE tgl_terbit>='$tgl_start' AND tgl_terbit<='$tgl_end' AND penelitian_jurnal.status='3' ORDER BY penelitian_jurnal.id DESC");
                         
                         if (mysqli_num_rows($q_ditolak) > 0) {
                             while ($r = mysqli_fetch_array($q_ditolak)) {

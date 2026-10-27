@@ -1,31 +1,28 @@
-<?php 
+<?php
 
-ob_start();	
+ob_start();
 session_start();
 
-	if (empty($_SESSION['ses_user']) AND empty($_SESSION['ses_pass']) AND empty($_SESSION['ses_level']) ){
-		header('location:/login');
+if (empty($_SESSION['ses_user']) AND empty($_SESSION['ses_pass']) AND empty($_SESSION['ses_level'])) {
+	header('location:/login');
+} else {
+
+	include "timeout.php";
+
+	if ($_SESSION['ses_login'] == 1) {
+		if (!validation()) {
+			$_SESSION['ses_login'] = 0;
+		}
 	}
-	else {
 
-		include "timeout.php";
+	if ($_SESSION['ses_login'] == 0) {
+		header('location:/logout');
+	} else {
 
-		if($_SESSION['ses_login']==1){
-			if(!validation()){
-				$_SESSION[ses_login] = 0;
-			}
-		}
-
-		if($_SESSION['ses_login']==0){
-			header('location:/logout');
-		}
-
-		else {
-	
-		define('valid','1');
+		define('valid', '1');
 
 		include "config/anti_inj.php";
-	
+
 
 		include "config/db.php";
 		include "config/date.php";
@@ -36,7 +33,7 @@ session_start();
 		include "config/combobox.php";
 		include "config/upload.php";
 		include "template/adminlte/template.php";
-		}
+	}
 
 }
 ?>

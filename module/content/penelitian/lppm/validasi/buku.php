@@ -6,7 +6,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['validasi_buku'])) {
     $status = mysqli_real_escape_string($con, $_POST['status']);
     $keterangan_validasi = mysqli_real_escape_string($con, $_POST['keterangan_validasi']);
 
-    $update = mysqli_query($con, "UPDATE penelitian_buku SET status='$status', keterangan_validasi='$keterangan_validasi' WHERE id='$id_buku'");
+    $q_judul = mysqli_query($con, "SELECT judul FROM penelitian_buku WHERE id='$id_buku'");
+    $d_judul = mysqli_fetch_assoc($q_judul);
+    $judul_esc = mysqli_real_escape_string($con, $d_judul['judul'] ?? '');
+
+    $update = mysqli_query($con, "UPDATE penelitian_buku SET status='$status', keterangan_validasi='$keterangan_validasi' WHERE judul='$judul_esc'");
 
     // Masukkan ke pivot tabel jika disetujui (status = 2)
     if ($status == '2') {
@@ -85,7 +89,8 @@ if (empty($folder[4])) {
                                     $selected = ($k['kode'] == @$folder[4]) ? 'selected' : '';
                                     ?>
                                     <option value='/penelitian/<?= $folder[2] ?>/validasi/<?= $k['kode'] ?>' <?= $selected ?>><?= $k['thn'] ?>     <?= $k['semester'] ?> (<?= $k['tgl_start'] ?> s.d
-                                        <?= $k['tgl_end'] ?>)</option>
+                                        <?= $k['tgl_end'] ?>)
+                                    </option>
                                     <?php
                                 }
                                 ?>
@@ -112,7 +117,7 @@ if (empty($folder[4])) {
                     <thead class="bg-white text-center align-middle">
                         <tr>
                             <th class="align-middle" style="width: 50px;">No</th>
-                            <th>Nama Dosen</th>
+                            <th>Nama</th>
                             <th>Judul Buku</th>
                             <th>ISBN</th>
                             <th>Penerbit</th>
@@ -124,7 +129,7 @@ if (empty($folder[4])) {
                     <tbody>
                         <?php
                         $no = 1;
-                        $q = mysqli_query($con, "SELECT *, penelitian_buku.id AS id_buku, penelitian_buku.status AS status_validasi FROM penelitian_buku, dosen WHERE penelitian_buku.nip_dosen=dosen.nik AND tgl_terbit>='$tgl_start' AND tgl_terbit<='$tgl_end' AND (penelitian_buku.status='1' OR penelitian_buku.status IS NULL OR penelitian_buku.status='') ORDER BY penelitian_buku.id DESC");
+                        $q = mysqli_query($con, "SELECT pb.*, pb.id AS id_buku, pb.status AS status_validasi, IFNULL(dosen.name_glr, mhs.name) AS name_glr FROM penelitian_buku pb INNER JOIN (SELECT MIN(id) as min_id FROM penelitian_buku WHERE tgl_terbit>='$tgl_start' AND tgl_terbit<='$tgl_end' AND (status='1' OR status IS NULL OR status='') GROUP BY judul) p2 ON pb.id = p2.min_id LEFT JOIN dosen ON pb.nip_dosen=dosen.nik LEFT JOIN mhs ON pb.nip_dosen=mhs.nim ORDER BY pb.id DESC");
 
                         if (mysqli_num_rows($q) > 0) {
                             while ($r = mysqli_fetch_array($q)) {
@@ -151,7 +156,8 @@ if (empty($folder[4])) {
                                     <td class="align-middle text-center">
                                         <span class="badge <?= $badge_class ?> p-2"><?= $status_text ?></span>
                                         <?php if (!empty($r['keterangan_validasi'])) { ?>
-                                            <br><small class="text-muted text-wrap" style="max-width: 200px; display: inline-block; margin-top: 5px;"><?= htmlspecialchars($r['keterangan_validasi']) ?></small>
+                                            <br><small class="text-muted text-wrap"
+                                                style="max-width: 200px; display: inline-block; margin-top: 5px;"><?= htmlspecialchars($r['keterangan_validasi']) ?></small>
                                         <?php } ?>
                                     </td>
                                     <td class="text-center align-middle">
@@ -209,7 +215,8 @@ if (empty($folder[4])) {
                                                                         <tr>
                                                                             <th style="width: 35%">Ketua</th>
                                                                             <td style="width: 65%">:
-                                                                                <?= htmlspecialchars($r['name_glr']) ?></td>
+                                                                                <?= htmlspecialchars($r['name_glr']) ?>
+                                                                            </td>
                                                                         </tr>
                                                                         <tr>
                                                                             <th>Judul Buku</th>
@@ -269,10 +276,11 @@ if (empty($folder[4])) {
                                                                     Dokumen Lampiran</h6>
                                                                 <div class="table-responsive">
                                                                     <?php
-                                                                    $qfile_pivot = mysqli_query($con, "SELECT fd.id, fd.url AS url_file, kode.desc AS type_file, dosen.name_glr 
+                                                                    $qfile_pivot = mysqli_query($con, "SELECT fd.id, fd.url AS url_file, kode.desc AS type_file, IFNULL(dosen.name_glr, mhs.name) AS name_glr 
                                                                                                     FROM file_dosen AS fd
                                                                                                     JOIN kode ON fd.kelompok = kode.kelompok AND fd.value_kode = kode.value 
-                                                                                                    JOIN dosen ON fd.nip_dosen = dosen.nik
+                                                                                                    LEFT JOIN dosen ON fd.nip_dosen = dosen.nik
+                                                                                                    LEFT JOIN mhs ON fd.nip_dosen = mhs.nim
                                                                                                     WHERE fd.id_cat='{$r['id_buku']}' AND kode.kelompok='file_buku'");
 
                                                                     if (mysqli_num_rows($qfile_pivot) > 0) {
@@ -295,7 +303,8 @@ if (empty($folder[4])) {
                                                                                     <tr>
                                                                                         <td class="align-middle"><?= $type ?></td>
                                                                                         <td class="align-middle text-center">
-                                                                                            <?= $rf['name_glr'] ?></td>
+                                                                                            <?= $rf['name_glr'] ?>
+                                                                                        </td>
                                                                                         <td class="text-center align-middle">
                                                                                             <a href="<?= @$storage_url . $rf['url_file'] ?>"
                                                                                                 target="_blank"
@@ -362,7 +371,7 @@ if (empty($folder[4])) {
                     <tbody>
                         <?php
                         $no = 1;
-                        $q_ditolak = mysqli_query($con, "SELECT *, penelitian_buku.id AS id_buku, penelitian_buku.status AS status_validasi FROM penelitian_buku, dosen WHERE penelitian_buku.nip_dosen=dosen.nik AND tgl_terbit>='$tgl_start' AND tgl_terbit<='$tgl_end' AND penelitian_buku.status='3' ORDER BY penelitian_buku.id DESC");
+                        $q_ditolak = mysqli_query($con, "SELECT penelitian_buku.*, penelitian_buku.id AS id_buku, penelitian_buku.status AS status_validasi, IFNULL(dosen.name_glr, mhs.name) AS name_glr FROM penelitian_buku LEFT JOIN dosen ON penelitian_buku.nip_dosen=dosen.nik LEFT JOIN mhs ON penelitian_buku.nip_dosen=mhs.nim WHERE tgl_terbit>='$tgl_start' AND tgl_terbit<='$tgl_end' AND penelitian_buku.status='3' ORDER BY penelitian_buku.id DESC");
 
                         if (mysqli_num_rows($q_ditolak) > 0) {
                             while ($r = mysqli_fetch_array($q_ditolak)) {
@@ -499,21 +508,21 @@ if (empty($folder[4])) {
 </script>
 
 <?php if (isset($_SESSION['swal_msg'])): ?>
-<script>
-    $(function() {
-        Swal.fire({
-            toast: true,
-            position: 'top-end',
-            icon: '<?= $_SESSION['swal_icon'] ?>',
-            title: '<?= $_SESSION['swal_msg'] ?>',
-            showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true
+    <script>
+        $(function () {
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: '<?= $_SESSION['swal_icon'] ?>',
+                title: '<?= $_SESSION['swal_msg'] ?>',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true
+            });
         });
-    });
-</script>
-<?php 
+    </script>
+    <?php
     unset($_SESSION['swal_msg']);
     unset($_SESSION['swal_icon']);
-endif; 
+endif;
 ?>

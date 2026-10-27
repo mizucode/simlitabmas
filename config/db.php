@@ -20,18 +20,21 @@
  * ****************************************************************************************
  */
 
-if (valid != '1') {
+if (!defined('valid') || valid != '1'){
 	header('location:/login');
-} else {
+}
 
-	define('host', 'localhost');
-	define('user', 'root');
-	define('pass', '');
-	define('dbase', 'siamik');
+else {
 
-	$con = mysqli_connect(host, user, pass) OR DIE(" Koneksi Gagal ");
+	define ('host' , 'localhost');
+	define ('user' , 'univ_siamik');
+	define ('pass' , '5Tk1pmKn6');
+	define ('dbase', 'univ_siamik');
 
-	mysqli_select_db($con, dbase) OR DIE("Cannot connect to database ");
+	mysqli_report(MYSQLI_REPORT_OFF);
+	$con = mysqli_connect(host, user, pass) OR DIE (" Koneksi Gagal ");
+
+	mysqli_select_db($con,dbase) OR DIE ("Cannot connect to database ");
 
 }
 

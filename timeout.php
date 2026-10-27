@@ -12,7 +12,7 @@
 			return true;
 		}
 		else {
-			unset($_SESSION[ses_timeout]);
+			unset($_SESSION['ses_timeout']);
 			return false;
 		}
 	}

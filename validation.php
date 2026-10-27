@@ -30,10 +30,10 @@ session_start();
 
 				if ($user['active']=='1') {
 
-					// session_start(); sudah dipanggil di baris 14
+					session_start();
 					include "timeout.php";
 
-					$template=mysqli_fetch_array(mysqli_query($con,"SELECT path,layout,skin,screenshoot FROM template WHERE id='{$user['template']}' "),MYSQLI_BOTH);
+					$template=mysqli_fetch_array(mysqli_query($con,"SELECT path,layout,skin,screenshoot FROM template WHERE id='$user[template]' "),MYSQLI_BOTH);
 
 					$_SESSION['ses_user']     = $user['username'];
 					$_SESSION['ses_name']     = $user['name'];
@@ -51,17 +51,17 @@ session_start();
 					session_regenerate_id();
 					$new_id = session_id();
 
-					mysqli_query($con,"UPDATE user SET session='$new_id' WHERE username='{$user['username']}'");
+					mysqli_query($con,"UPDATE user SET session='$new_id' WHERE username='$user[username]'");
 
 					$date = date("Ymd"); 
 					$time   = time();
 
-					$s = mysqli_query($con,"SELECT online FROM statistik WHERE ip='$ip' AND date='$date' AND user='{$_SESSION['ses_user']}' ");
-					if(mysqli_num_rows($s) == 0){
-						mysqli_query($con,"INSERT INTO statistik(ip, date, hit, online,user) VALUES('$ip','$date','1','$time', '{$_SESSION['ses_user']}')");
+					$s = mysqli_query($con,"SELECT online FROM statistik WHERE ip='$ip' AND date='$date' AND user='$_SESSION[ses_user]' ");
+					if($s && $s instanceof mysqli_result && mysqli_num_rows($s) > 0){
+						mysqli_query($con,"UPDATE statistik SET hit=hit+1 WHERE ip='$ip' AND date='$date' AND user='$_SESSION[ses_user]' ");
 					}
 					else {
-						mysqli_query($con,"UPDATE statistik SET hit=hit+1 WHERE ip='$ip' AND date='$date' AND user='{$_SESSION['ses_user']}' ");
+						mysqli_query($con,"INSERT INTO statistik(ip, date, hit, online,user) VALUES('$ip','$date','1','$time', '$_SESSION[ses_user]')");
 					}
 					if(!empty($user['bp'])) {
 						header('location:/dashboard');

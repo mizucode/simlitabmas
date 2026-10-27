@@ -121,6 +121,10 @@
 						elseif ($module=='update'){
 							if (@$folder[2] == 'penelitian') {
 								include "module/content/update/penelitian.php";
+							} elseif (@$folder[2] == 'pengabdian') {
+								include "module/content/update/pengabdian.php";
+							} elseif (@$folder[2] == 'referensi') {
+								include "module/content/update/referensi.php";
 							} else {
 								include "module/content/update/lppm.php";
 							}
@@ -128,6 +132,10 @@
 						elseif ($module=='insert'){
 							if (@$folder[2] == 'penelitian') {
 								include "module/content/insert/penelitian.php";
+							} elseif (@$folder[2] == 'pengabdian') {
+								include "module/content/insert/pengabdian.php";
+							} elseif (@$folder[2] == 'referensi') {
+								include "module/content/insert/referensi.php";
 							} else {
 								include "module/content/insert/lppm.php";
 							}
@@ -135,6 +143,10 @@
 						elseif ($module=='delete'){
 							if (@$folder[2] == 'penelitian') {
 								include "module/content/delete/penelitian.php";
+							} elseif (@$folder[2] == 'pengabdian') {
+								include "module/content/delete/pengabdian.php";
+							} elseif (@$folder[2] == 'referensi') {
+								include "module/content/delete/referensi.php";
 							} else {
 								include "module/content/delete/lppm.php";
 							}
@@ -159,6 +171,13 @@
 						}
 						elseif ($module=='repository'){
 							include "module/content/repository/lppm.php";
+						}
+						elseif ($module=='referensi'){
+							if (@$folder[2] == 'jurnal') {
+								include "module/content/referensi/jurnal.php";
+							} elseif (@$folder[2] == 'klaster') {
+								include "module/content/referensi/klaster.php";
+							}
 						}
 						else {
 							include "module/content/error/404.php";

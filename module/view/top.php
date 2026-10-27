@@ -1,7 +1,7 @@
 <?php
 	$qfoto=mysqli_query($con,"SELECT file FROM file WHERE active='Y' AND type='foto' AND user='$_SESSION[ses_user]' LIMIT 1");
-	$foto=mysqli_fetch_array($qfoto,MYSQLI_BOTH);
-	$cek_foto=mysqli_num_rows($qfoto);
+	$foto = ($qfoto && $qfoto instanceof mysqli_result) ? mysqli_fetch_array($qfoto, MYSQLI_BOTH) : [];
+$cek_foto = ($qfoto && $qfoto instanceof mysqli_result) ? mysqli_num_rows($qfoto) : 0;
 
 	if($cek_foto<1) {
 		$show_foto = '<a href=account-foto-add---->[Masukan]</a></center><br>' ;

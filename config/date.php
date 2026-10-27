@@ -1,6 +1,6 @@
 <?php
 
-if (valid!='1'){
+if (!defined('valid') || valid != '1'){
 	header('location:/login');
 }
 else {
