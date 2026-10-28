@@ -13,6 +13,10 @@ else {
 	$tom_date = date("Y-m-d", $satu_hari);
 
 	function indo_date($date){
+			if (empty($date) || $date == '0000-00-00') {
+				return '-';
+			}
+			$date = (string)$date;
 			$tanggal = substr($date,8,2);
 			$bulan = konv_bulan(substr($date,5,2));
 			$tahun = substr($date,0,4);
@@ -20,8 +24,12 @@ else {
 	}	
 
 	function simple_date($date){
+			if (empty($date) || $date == '0000-00-00') {
+				return '-';
+			}
+			$date = (string)$date;
 			$tanggal = substr($date,8,2);
-			$bulan = substr(konv_bulan(substr($date,5,2)),0,3);
+			$bulan = substr((string)konv_bulan(substr($date,5,2)),0,3);
 			$tahun = substr($date,0,4);
 			return $tanggal.'/'.$bulan;		 
 	}

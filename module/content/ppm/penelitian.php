@@ -1,72 +1,88 @@
-<?php 
+<?php
 
-ob_start();	
+ob_start();
 
-if (empty($_SESSION['ses_user']) AND empty($_SESSION['ses_pass']) AND empty($_SESSION['ses_level']) ){
+if (empty($_SESSION['ses_user']) AND empty($_SESSION['ses_pass']) AND empty($_SESSION['ses_level'])) {
 	header('location:/login');
-}
-else {
-	switch(@$folder[3]) {
-		default :
-		
-			if(empty($folder['3'])) {
-				$hibah = mysqli_fetch_array(mysqli_query($con,"SELECT * FROM hibah WHERE tipe='1' AND status='1' ORDER BY id DESC LIMIT 1 "));
+} else {
+	switch (@$folder[3] ?? null) {
+		default:
+
+			if (empty($folder[3])) {
+				$hibah = mysqli_fetch_array(mysqli_query($con, "SELECT * FROM hibah WHERE tipe='1' AND status='1' ORDER BY id DESC LIMIT 1 "));
+			} else {
+				$hibah = mysqli_fetch_array(mysqli_query($con, "SELECT * FROM hibah WHERE id='$folder[3]' "));
 			}
-			else {
-				$hibah = mysqli_fetch_array(mysqli_query($con,"SELECT * FROM hibah WHERE id='$folder[3]' "));
+			if (!is_array($hibah)) {
+				$hibah = [
+					'id' => '',
+					'skema' => '',
+					'tahun' => '',
+					'awal' => '',
+					'lama' => '',
+					'dana' => 0,
+					'start_apply' => '',
+					'end_apply' => ''
+				];
 			}
-			$sta = mysqli_fetch_array(mysqli_query($con,"SELECT * FROM ts WHERE kode='$folder[3]' "));
-			$tgl_start = $sta['tgl_start'];
-			$tgl_end = $sta['tgl_end'];
-		
-?>
+			$sta = !empty($folder[3]) ? mysqli_fetch_array(mysqli_query($con, "SELECT * FROM ts WHERE kode='$folder[3]' ")) : null;
+			$tgl_start = is_array($sta) ? ($sta['tgl_start'] ?? null) : null;
+			$tgl_end = is_array($sta) ? ($sta['tgl_end'] ?? null) : null;
+
+			?>
 			<div class='row'>
 				<div class='col-md-12'>
 					<div class='card card-success'>
 						<div class='card-body'>
-							<select onchange="window.document.location.href=this.options[this.selectedIndex].value;" class='form-control' name='ta'>
-							<option value='/ppm/penelitian/<?php echo $folder[2]; ?>'>-- Pilih Skema --</option>
+							<select onchange="window.document.location.href=this.options[this.selectedIndex].value;"
+								class='form-control' name='ta'>
+								<option value='/ppm/penelitian/<?php echo $folder[2] ?? ''; ?>'>-- Pilih Skema --</option>
 
 
-						<?php
-		
-						$qp = mysqli_query($con,"SELECT * FROM hibah WHERE tipe='1' ORDER BY tahun");
-						while($p = mysqli_fetch_array($qp)) {
-							if($p['id']==$folder[3]) { $selected = 'selected'; } else {$selected = '';}
-							echo "
+								<?php
+
+								$qp = mysqli_query($con, "SELECT * FROM hibah WHERE tipe='1' ORDER BY tahun");
+								while ($p = mysqli_fetch_array($qp)) {
+									if ($p['id'] == ($folder[3] ?? null)) {
+										$selected = 'selected';
+									} else {
+										$selected = '';
+									}
+									echo "
 								<option value='/ppm/penelitian/$p[id]/' $selected>$p[skema] ($p[tahun])</option>
 							";
-						}
-						?>
-						
+								}
+								?>
+
 							</select>
-						
-						
+
+
 						</div>
 					</div>
 				</div>
 			</div>
-			
+
 			<div class="callout callout-info">
 				<h5><?php echo $hibah['skema']; ?></h5>
 				<br>
 				<p>
-				Tahun <?php echo $hibah['tahun']; ?>
+					Tahun <?php echo $hibah['tahun']; ?>
 				</p>
 				<p>
-				Awal penelitian <?php echo indo_date($hibah['awal']); ?>
+					Awal penelitian <?php echo indo_date($hibah['awal']); ?>
 				</p>
 				<p>
-				Lama kegiatan <?php echo $hibah['lama']; ?>
+					Lama kegiatan <?php echo $hibah['lama']; ?>
 				</p>
 				<p>
-			Maksimal usulan <?php echo rupiah($hibah['dana']); ?>
+					Maksimal usulan <?php echo rupiah($hibah['dana']); ?>
 				</p>
 				<p>
-				Periode pendaftaran usulan <?php echo indo_date($hibah['start_apply']); ?> s.d <?php echo indo_date($hibah['end_apply']); ?>
+					Periode pendaftaran usulan <?php echo indo_date($hibah['start_apply']); ?> s.d
+					<?php echo indo_date($hibah['end_apply']); ?>
 				</p>
 			</div>
-			
+
 			<div class='row'>
 				<div class='col-md-12'>
 					<div class="card card-outline card-danger">
@@ -85,48 +101,47 @@ else {
 									</tr>
 								</thead>
 								<tbody>
-						<?php
-							$no=1;
-							$q = mysqli_query($con,"SELECT aj.*,dosen.nik,dosen.name_glr FROM ajuan_penelitian AS aj,dosen WHERE dosen.nik=aj.nip_dosen AND aj.id_skema='$hibah[id]' ");
-							if(mysqli_num_rows($q)<1) {
-								echo"<tr><td colspan='6'><p class='text-center text-danger'>Tidak ada ajuan</p></td></tr>";
-							}
-							else {
+									<?php
+									$no = 1;
+									$q = mysqli_query($con, "SELECT aj.*,dosen.nik,dosen.name_glr FROM ajuan_penelitian AS aj,dosen WHERE dosen.nik=aj.nip_dosen AND aj.id_skema='$hibah[id]' ");
+									if (mysqli_num_rows($q) < 1) {
+										echo "<tr><td colspan='6'><p class='text-center text-danger'>Tidak ada ajuan</p></td></tr>";
+									} else {
 
-								while($r=mysqli_fetch_array($q)) {
-									$dosen = mysqli_fetch_array(mysqli_query($con,"SELECT nik,name_glr FROM dosen WHERE nik='$r[nip_dosen]' LIMIT 1"));
-									$skema = mysqli_fetch_array(mysqli_query($con,"SELECT * FROM kode WHERE value='$r[id_skema]' AND kelompok='skema_penelitian' LIMIT 1"));
-									$peran = mysqli_fetch_array(mysqli_query($con,"SELECT * FROM kode WHERE value='$r[id_peran]' AND kelompok='peran_penelitian' LIMIT 1"));
-									$dana_kampus = rupiah($r['dana_kampus']);
-									if($r['status']=='' OR $r['status']=='1') {
-										$aksi = "<p><a href='/update/ppm_acc/penelitian/$r[id]/2' class='btn btn-sm btn-success'><i class='fas fa-check'></i> Danai</a></p>
+										while ($r = mysqli_fetch_array($q)) {
+											$dosen = mysqli_fetch_array(mysqli_query($con, "SELECT nik,name_glr FROM dosen WHERE nik='$r[nip_dosen]' LIMIT 1"));
+											$skema = mysqli_fetch_array(mysqli_query($con, "SELECT * FROM kode WHERE value='$r[id_skema]' AND kelompok='skema_penelitian' LIMIT 1"));
+											$peran = mysqli_fetch_array(mysqli_query($con, "SELECT * FROM kode WHERE value='$r[id_peran]' AND kelompok='peran_penelitian' LIMIT 1"));
+											$dana_kampus = rupiah($r['dana_kampus']);
+											if ($r['status'] == '' OR $r['status'] == '1') {
+												$aksi = "<p><a href='/update/ppm_acc/penelitian/$r[id]/2' class='btn btn-sm btn-success'><i class='fas fa-check'></i> Danai</a></p>
 										<p><a href='/update/ppm/penelitian/$r[id]/3' class='btn btn-sm btn-danger'><i class='fas fa-times'></i> Tolak</a></p>
 										";
-									} elseif($r['status']=='2') {
-										$aksi = '<span class="badge badge-success">Status Didanai</span>';
-									} elseif($r['status']=='3') {
-										$aksi = '<span class="badge badge-danger">Status Ditolak</span>';
-									}
+											} elseif ($r['status'] == '2') {
+												$aksi = '<span class="badge badge-success">Status Didanai</span>';
+											} elseif ($r['status'] == '3') {
+												$aksi = '<span class="badge badge-danger">Status Ditolak</span>';
+											}
 
-									echo"
+											echo "
 										<tr>
 											<td>$no</td>
 											<td>
 											<b>$r[judul_kegiatan]</b><br>Lokasi: $r[lokasi]<br>Usulan Dana: $dana_kampus<br>
 									";
-									$qfile = mysqli_query($con,"SELECT fd.id,fd.url,kode.desc FROM file_dosen AS fd,kode WHERE fd.kelompok=kode.kelompok AND fd.value_kode=kode.value AND fd.nip_dosen='$r[nip_dosen]' AND fd.id_cat='$r[id]' AND kode.kelompok='file_penelitian' ");
-									while($rfile=mysqli_fetch_array($qfile)) {
-											echo"
+											$qfile = mysqli_query($con, "SELECT fd.id,fd.url,kode.desc FROM file_dosen AS fd,kode WHERE fd.kelompok=kode.kelompok AND fd.value_kode=kode.value AND fd.nip_dosen='$r[nip_dosen]' AND fd.id_cat='$r[id]' AND kode.kelompok='file_penelitian' ");
+											while ($rfile = mysqli_fetch_array($qfile)) {
+												echo "
 												<a href='https://file.umkuningan.id/$rfile[url]' target='_blank'><i class='fa fa-file'></i> $rfile[desc]</a><br>
 											";
-									}
-									$qrevfile = mysqli_query($con,"SELECT fd.id,fd.url,kode.desc FROM file_dosen AS fd,kode WHERE fd.kelompok=kode.kelompok AND fd.value_kode=kode.value AND fd.nip_dosen='$r[nip_dosen]' AND fd.id_cat='$r[id]' AND kode.kelompok='file_rev_penelitian' ");
-									while($rrevfile=mysqli_fetch_array($qrevfile)) {
-											echo"
+											}
+											$qrevfile = mysqli_query($con, "SELECT fd.id,fd.url,kode.desc FROM file_dosen AS fd,kode WHERE fd.kelompok=kode.kelompok AND fd.value_kode=kode.value AND fd.nip_dosen='$r[nip_dosen]' AND fd.id_cat='$r[id]' AND kode.kelompok='file_rev_penelitian' ");
+											while ($rrevfile = mysqli_fetch_array($qrevfile)) {
+												echo "
 												<a href='https://file.umkuningan.id/$rrevfile[url]' target='_blank'><i class='fa fa-file'></i> $rrevfile[desc]</a><br>
 											";
-									}
-									echo"
+											}
+											echo "
 											<p><a href='/ppm/penelitian/luaran/$r[id]' target='_blank'><i class='fa fa-star-of-life'></i> Luaran</a>
 											</td>
 											<td><span class='text-xs'>
@@ -148,31 +163,35 @@ else {
 											<p><select class='form-control text-xs' name='nik_reviewer1'>
 												<option value=''>-- Pilih --</option>
 									";
-													$qreviewer1 = mysqli_query($con,"SELECT * FROM dosen WHERE status='A' AND reviewer='1' ORDER BY name");
-													while($reviewer1=mysqli_fetch_array($qreviewer1)) {
-														if($reviewer1['nik']==$r['nik_reviewer1']) {
-															$selected = 'selected';
-														} else { $selected = ''; }
-														echo"
+											$qreviewer1 = mysqli_query($con, "SELECT * FROM dosen WHERE status='A' AND reviewer='1' ORDER BY name");
+											while ($reviewer1 = mysqli_fetch_array($qreviewer1)) {
+												if ($reviewer1['nik'] == $r['nik_reviewer1']) {
+													$selected = 'selected';
+												} else {
+													$selected = '';
+												}
+												echo "
 															<option value='$reviewer1[nik]' $selected>$reviewer1[name_glr]</option>
 														";
-													}
-									echo"
+											}
+											echo "
 											</select></p>
 											<p>
 											<select class='form-control text-xs' name='nik_reviewer2'>
 												<option value=''>-- Pilih --</option>
 									";
-													$qreviewer2 = mysqli_query($con,"SELECT * FROM dosen WHERE status='A' AND reviewer='1' ORDER BY name");
-													while($reviewer2=mysqli_fetch_array($qreviewer2)) {
-														if($reviewer2['nik']==$r['nik_reviewer2']) {
-															$selected2 = 'selected';
-														} else { $selected2 = ''; }
-														echo"
+											$qreviewer2 = mysqli_query($con, "SELECT * FROM dosen WHERE status='A' AND reviewer='1' ORDER BY name");
+											while ($reviewer2 = mysqli_fetch_array($qreviewer2)) {
+												if ($reviewer2['nik'] == $r['nik_reviewer2']) {
+													$selected2 = 'selected';
+												} else {
+													$selected2 = '';
+												}
+												echo "
 															<option value='$reviewer2[nik]' $selected2>$reviewer2[name_glr]</option>
 														";
-													}
-									echo"
+											}
+											echo "
 											</select></p>
 											
 											<p><label>Dana yang disetujui</label><input type='number' name='acc_dana' value='$r[acc_dana]' class='form-control text-sm'></p>
@@ -186,10 +205,10 @@ else {
 											</td>
 										</tr>
 									";
-									$no++;
-								}
-							}
-						?>
+											$no++;
+										}
+									}
+									?>
 								</tbody>
 							</table>
 						</div>
@@ -197,11 +216,11 @@ else {
 
 				</div>
 			</div>
-<?php		
-		break;
-	
+			<?php
+			break;
+
 		case 'review':
-?>
+			?>
 			<div class='row'>
 				<div class='col-md-12'>
 					<div class="card card-outline card-danger">
@@ -218,32 +237,32 @@ else {
 									</tr>
 								</thead>
 								<tbody>
-						<?php
+									<?php
 
-							$q = mysqli_query($con,"SELECT * FROM ajuan_penelitian AS aj,dosen WHERE dosen.nik=aj.nip_dosen AND aj.id='$folder[4]' ");
-							if(mysqli_num_rows($q)<1) {
-								echo"<tr><td colspan='6'><p class='text-center text-danger'>Tidak ada ajuan</p></td></tr>";
-							}
-							else {
+									$id_ajuan = $folder[4] ?? '';
+									$q = mysqli_query($con, "SELECT * FROM ajuan_penelitian AS aj,dosen WHERE dosen.nik=aj.nip_dosen AND aj.id='$id_ajuan' ");
+									if (mysqli_num_rows($q) < 1) {
+										echo "<tr><td colspan='6'><p class='text-center text-danger'>Tidak ada ajuan</p></td></tr>";
+									} else {
 
-								while($r=mysqli_fetch_array($q)) {
-									$dosen = mysqli_fetch_array(mysqli_query($con,"SELECT nik,name_glr FROM dosen WHERE nik='$r[nip_dosen]' LIMIT 1"));
-									$skema = mysqli_fetch_array(mysqli_query($con,"SELECT * FROM kode WHERE value='$r[id_skema]' AND kelompok='skema_penelitian' LIMIT 1"));
-									$peran = mysqli_fetch_array(mysqli_query($con,"SELECT * FROM kode WHERE value='$r[id_peran]' AND kelompok='peran_penelitian' LIMIT 1"));
-									$dana_kampus = rupiah($r['dana_kampus']);
-									$dana_acc = rupiah($r['acc_dana']);
-									echo"
+										while ($r = mysqli_fetch_array($q)) {
+											$dosen = mysqli_fetch_array(mysqli_query($con, "SELECT nik,name_glr FROM dosen WHERE nik='$r[nip_dosen]' LIMIT 1"));
+											$skema = mysqli_fetch_array(mysqli_query($con, "SELECT * FROM kode WHERE value='$r[id_skema]' AND kelompok='skema_penelitian' LIMIT 1"));
+											$peran = mysqli_fetch_array(mysqli_query($con, "SELECT * FROM kode WHERE value='$r[id_peran]' AND kelompok='peran_penelitian' LIMIT 1"));
+											$dana_kampus = rupiah($r['dana_kampus']);
+											$dana_acc = rupiah($r['acc_dana']);
+											echo "
 										<tr>
 											<td>
 											<b>$r[judul_kegiatan]</b><br>Lokasi: $r[lokasi]<br>Usulan Dana: $dana_kampus<br>Dana Disetujui: $dana_acc<br>
 									";
-									$qfile = mysqli_query($con,"SELECT fd.id,fd.url,kode.desc FROM file_dosen AS fd,kode WHERE fd.kelompok=kode.kelompok AND fd.value_kode=kode.value AND fd.nip_dosen='$r[nip_dosen]' AND fd.id_cat='$r[id]' AND kode.kelompok='file_penelitian' ");
-									while($rfile=mysqli_fetch_array($qfile)) {
-											echo"
+											$qfile = mysqli_query($con, "SELECT fd.id,fd.url,kode.desc FROM file_dosen AS fd,kode WHERE fd.kelompok=kode.kelompok AND fd.value_kode=kode.value AND fd.nip_dosen='$r[nip_dosen]' AND fd.id_cat='$r[id]' AND kode.kelompok='file_penelitian' ");
+											while ($rfile = mysqli_fetch_array($qfile)) {
+												echo "
 												<a href='https://file.umkuningan.id/$rfile[url]' target='_blank'><i class='fa fa-file'></i> $rfile[desc]</a><br>
 											";
-									}
-									echo"
+											}
+											echo "
 											</td>
 											<td><span class='text-xs'>
 											$dosen[nik] - 
@@ -271,23 +290,23 @@ else {
 											</td>
 										</tr>
 									";
-									$no++;
-								}
-							}
-						?>
+											$no++;
+										}
+									}
+									?>
 								</tbody>
 							</table>
 						</div>
 					</div>
-					
+
 				</div>
 			</div>
 
-<?php
-		break;
-		
+			<?php
+			break;
+
 		case 'luaran':
-?>	
+			?>
 			<div class='row'>
 				<div class='col-md-12'>
 					<div class="card card-outline card-danger">
@@ -304,31 +323,31 @@ else {
 									</tr>
 								</thead>
 								<tbody>
-						<?php
+									<?php
 
-							$q = mysqli_query($con,"SELECT * FROM ajuan_penelitian AS aj,dosen WHERE dosen.nik=aj.nip_dosen AND aj.id='$folder[4]' ");
-							if(mysqli_num_rows($q)<1) {
-								echo"<tr><td colspan='6'><p class='text-center text-danger'>Tidak ada ajuan</p></td></tr>";
-							}
-							else {
+									$id_ajuan = $folder[4] ?? '';
+									$q = mysqli_query($con, "SELECT * FROM ajuan_penelitian AS aj,dosen WHERE dosen.nik=aj.nip_dosen AND aj.id='$id_ajuan' ");
+									if (mysqli_num_rows($q) < 1) {
+										echo "<tr><td colspan='6'><p class='text-center text-danger'>Tidak ada ajuan</p></td></tr>";
+									} else {
 
-								while($r=mysqli_fetch_array($q)) {
-									$dosen = mysqli_fetch_array(mysqli_query($con,"SELECT nik,name_glr FROM dosen WHERE nik='$r[nip_dosen]' LIMIT 1"));
-									$skema = mysqli_fetch_array(mysqli_query($con,"SELECT * FROM kode WHERE value='$r[id_skema]' AND kelompok='skema_penelitian' LIMIT 1"));
-									$peran = mysqli_fetch_array(mysqli_query($con,"SELECT * FROM kode WHERE value='$r[id_peran]' AND kelompok='peran_penelitian' LIMIT 1"));
-									$dana_kampus = rupiah($r['dana_kampus']);
-									echo"
+										while ($r = mysqli_fetch_array($q)) {
+											$dosen = mysqli_fetch_array(mysqli_query($con, "SELECT nik,name_glr FROM dosen WHERE nik='$r[nip_dosen]' LIMIT 1"));
+											$skema = mysqli_fetch_array(mysqli_query($con, "SELECT * FROM kode WHERE value='$r[id_skema]' AND kelompok='skema_penelitian' LIMIT 1"));
+											$peran = mysqli_fetch_array(mysqli_query($con, "SELECT * FROM kode WHERE value='$r[id_peran]' AND kelompok='peran_penelitian' LIMIT 1"));
+											$dana_kampus = rupiah($r['dana_kampus']);
+											echo "
 										<tr>
 											<td>
 											<b>$r[judul_kegiatan]</b><br>Lokasi: $r[lokasi]<br>Usulan Dana: $dana_kampus<br>
 									";
-									$qfile = mysqli_query($con,"SELECT fd.id,fd.url,kode.desc FROM file_dosen AS fd,kode WHERE fd.kelompok=kode.kelompok AND fd.value_kode=kode.value AND fd.nip_dosen='$r[nip_dosen]' AND fd.id_cat='$r[id]' AND kode.kelompok='file_penelitian' ");
-									while($rfile=mysqli_fetch_array($qfile)) {
-											echo"
+											$qfile = mysqli_query($con, "SELECT fd.id,fd.url,kode.desc FROM file_dosen AS fd,kode WHERE fd.kelompok=kode.kelompok AND fd.value_kode=kode.value AND fd.nip_dosen='$r[nip_dosen]' AND fd.id_cat='$r[id]' AND kode.kelompok='file_penelitian' ");
+											while ($rfile = mysqli_fetch_array($qfile)) {
+												echo "
 												<a href='https://file.umkuningan.id/$rfile[url]' target='_blank'><i class='fa fa-file'></i> $rfile[desc]</a><br>
 											";
-									}
-									echo"
+											}
+											echo "
 											</td>
 											<td><span class='text-xs'>
 											$dosen[nik] - 
@@ -345,38 +364,38 @@ else {
 											</td>
 											<td>
 									";
-										$ql = mysqli_query($con,"SELECT * FROM luaran WHERE id_ajuan='$folder[4]' AND ppm='1' ");
-										while($l=mysqli_fetch_array($ql)) {
-											if($l['status']=='1') {
-												$status_luaran = 'Wajib';
-											} else {
-												$status_luaran = 'Tambahan';
-											}
-											echo"
+											$ql = mysqli_query($con, "SELECT * FROM luaran WHERE id_ajuan='$id_ajuan' AND ppm='1' ");
+											while ($l = mysqli_fetch_array($ql)) {
+												if ($l['status'] == '1') {
+													$status_luaran = 'Wajib';
+												} else {
+													$status_luaran = 'Tambahan';
+												}
+												echo "
 												<b>[$status_luaran] $l[nama]</b> - $l[keterangan]
 												<hr>
 											";
-										
-										}
-									echo"
+
+											}
+											echo "
 											</td>
 										</tr>
 									";
-									$no++;
-								}
-							}
-						?>
+											$no++;
+										}
+									}
+									?>
 								</tbody>
 							</table>
 						</div>
 					</div>
-					
+
 				</div>
 			</div>
 
-	
-<?php
-		break;
+
+			<?php
+			break;
 
 	}
 }

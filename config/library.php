@@ -22,7 +22,7 @@ else {
                     "Oktober", "November", "Desember");
 
 	function rupiah($angka){
-		$hasil = "Rp. " . number_format($angka,0,',','.').",-";
+		$hasil = "Rp. " . number_format((float)$angka,0,',','.').",-";
 		return $hasil;
 	}
  
